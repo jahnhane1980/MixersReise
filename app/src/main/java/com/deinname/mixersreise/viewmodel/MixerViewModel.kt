@@ -25,7 +25,7 @@ class MixerViewModel(
     // --- Knuddel Logik ---
     var isPettingWanted by mutableStateOf(false)
     var petCount by mutableStateOf(0)
-    private val MAX_PETS = 15
+    val MAX_PETS = 15 // Val, damit UI darauf zugreifen kann
 
     // --- Dialog System ---
     var activeDialog by mutableStateOf<MixerDialog?>(null)
@@ -71,7 +71,7 @@ class MixerViewModel(
 
             if (petCount >= MAX_PETS) {
                 isPettingWanted = false
-                petCount = 0
+                // Die Sprechblase triggern
                 showTemporaryMessage("Vielen Dank! Jetzt bin ich ordentlich durchgekuschelt. 😊")
             }
         } else if (tool == ToolType.TALK) {
@@ -84,9 +84,10 @@ class MixerViewModel(
     private fun showTemporaryMessage(message: String) {
         mixerResponseText = message
         viewModelScope.launch {
-            delay(5000) // 5 Sekunden warten
+            delay(7000) // 7 Sekunden warten, passt zum gemütlichen Look
             if (mixerResponseText == message) {
                 mixerResponseText = ""
+                petCount = 0 // Counter erst nach Sprechblase resetten
             }
         }
     }

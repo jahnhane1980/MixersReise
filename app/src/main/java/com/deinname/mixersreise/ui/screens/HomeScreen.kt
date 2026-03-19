@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -19,9 +20,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight // DIESER IMPORT HAT GEFEHLT
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.MixerTopBar
+import com.deinname.mixersreise.ui.theme.*
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.ToolType
 
@@ -30,7 +33,6 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
     val mixerScale by animateFloatAsState(targetValue = if (viewModel.isBaby) 0.7f else 1.0f)
     var selectedTool by remember { mutableStateOf<ToolType?>(null) }
 
-    // Auswahl aufheben, wenn Hand deaktiviert wird
     LaunchedEffect(viewModel.isPettingWanted) {
         if (!viewModel.isPettingWanted && selectedTool == ToolType.HAND) {
             selectedTool = null
@@ -41,9 +43,13 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
         topBar = { MixerTopBar(viewModel.level, viewModel.totalHearts, onOpenMap, onOpenSettings) },
         bottomBar = {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                tonalElevation = 12.dp,
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .border(2.dp, TextBrown.copy(alpha = 0.2f), RoundedCornerShape(24.dp)),
+                tonalElevation = 8.dp,
+                color = Color.White.copy(alpha = 0.9f)
             ) {
                 Row(
                     modifier = Modifier.navigationBarsPadding().padding(vertical = 12.dp),
@@ -60,7 +66,7 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            // 1. HINTERGRUND
+            // 1. HINTERGRUND (Dein Bild)
             Image(
                 painter = painterResource(id = R.drawable.bg_bedroom_plushies),
                 contentDescription = null,
@@ -71,34 +77,35 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
             // 2. MIXER & INTERAKTION
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
-                // --- SPRECHBLASE ---
+                // --- SPRECHBLASE (Creme & Braun) ---
                 AnimatedVisibility(
                     visible = viewModel.mixerResponseText.isNotEmpty(),
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically(),
-                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp)
+                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.dp)
                 ) {
                     Surface(
-                        color = Color.White,
-                        shape = RoundedCornerShape(15.dp),
-                        shadowElevation = 8.dp
+                        color = BubbleCream,
+                        shape = RoundedCornerShape(20.dp),
+                        shadowElevation = 10.dp,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     ) {
                         Text(
                             text = viewModel.mixerResponseText,
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black
+                            modifier = Modifier.padding(20.dp),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                            color = TextBrown
                         )
                     }
                 }
 
-                // Mixer Character (mixer_idle)
+                // Mixer Character
                 Image(
                     painter = painterResource(id = R.drawable.mixer_idle),
                     contentDescription = "Mixer",
                     modifier = Modifier
                         .scale(mixerScale)
-                        .size(300.dp)
+                        .size(320.dp)
                         .pointerInput(selectedTool) {
                             detectDragGestures { change, dragAmount ->
                                 change.consume()
@@ -113,31 +120,24 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
                             }
                         }
                 )
+            }
 
-                // Sabber Overlay
-                if (viewModel.droolAlpha > 0f) {
-                    Image(
-                        painter = painterResource(id = R.drawable.overlay_drool),
-                        modifier = Modifier.size(220.dp).alpha(viewModel.droolAlpha),
-                        contentDescription = null
+            // --- GOLDENER LADEBALKEN ---
+            if (viewModel.isPettingWanted && selectedTool == ToolType.HAND) {
+                Column(
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 120.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Mixer möchte knuddeln!", color = TextBrown, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { viewModel.petCount / viewModel.MAX_PETS.toFloat() },
+                        modifier = Modifier.fillMaxWidth(0.6f).height(12.dp).clip(CircleShape),
+                        color = ProgressGold,
+                        trackColor = Color.White.copy(alpha = 0.5f)
                     )
                 }
             }
-
-            // Fortschrittsanzeige unten
-            if (viewModel.isPettingWanted && selectedTool == ToolType.HAND) {
-                LinearProgressIndicator(
-                    progress = { viewModel.petCount / 15f },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp).fillMaxWidth(0.6f),
-                    color = Color.Magenta
-                )
-            }
-
-            // Test-Button (Kannst du später löschen)
-            Button(
-                onClick = { viewModel.triggerPettingDesire() },
-                modifier = Modifier.align(Alignment.TopStart).padding(16.dp).alpha(0.5f)
-            ) { Text("Test: Knuddeln") }
         }
     }
 }
@@ -145,21 +145,29 @@ fun HomeScreen(viewModel: MixerViewModel, onOpenMap: () -> Unit, onOpenSettings:
 @Composable
 fun InventoryItem(tool: ToolType, isSelected: Boolean, viewModel: MixerViewModel, onClick: (ToolType) -> Unit) {
     val enabled = viewModel.isToolEnabled(tool)
+    val containerColor = when {
+        tool == ToolType.HAND && enabled -> PettingwantedPink
+        isSelected -> Color(0xFFE6E6FA) // Lavendel für Selektion
+        enabled -> Color.White.copy(alpha = 0.7f)
+        else -> Color.LightGray.copy(alpha = 0.3f)
+    }
+
     IconButton(
         onClick = { onClick(tool) },
         enabled = enabled,
         modifier = Modifier
-            .size(54.dp)
-            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent, CircleShape)
+            .size(56.dp)
+            .background(containerColor, CircleShape)
             .clip(CircleShape)
+            .border(if (isSelected) 2.dp else 0.dp, TextBrown, CircleShape)
     ) {
-        val icon = when(tool) {
+        val iconRes = when(tool) {
             ToolType.HAND -> R.drawable.tool_hand
             ToolType.FOOD -> R.drawable.tool_food
             ToolType.COKE -> R.drawable.tool_coke
             ToolType.SPONGE -> R.drawable.tool_sponge
             ToolType.TALK -> R.drawable.tool_talk
         }
-        Image(painter = painterResource(id = icon), contentDescription = null, modifier = Modifier.size(36.dp).alpha(if (enabled) 1f else 0.3f))
+        Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(32.dp).alpha(if (enabled) 1f else 0.4f))
     }
 }
