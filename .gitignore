@@ -1,0 +1,39 @@
+# --- Gradle & Build ---
+.gradle/
+build/
+/*/build/
+/captures
+
+# --- Lokale Konfiguration (WICHTIG!) ---
+# Diese Dateien enthalten Pfade zu deinem PC und sollten NIE auf GitHub landen
+local.properties
+.idea/workspace.xml
+.idea/caches
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/libraries/
+
+# --- Android Studio / IntelliJ ---
+*.iml
+*.ipr
+*.iws
+.idea/shelf/
+.idea/tasks.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+.idea/codeStyles/
+.idea/inspectionProfiles/
+
+# --- System-Dateien ---
+.DS_Store
+thumbs.db
+desktop.ini
+
+# --- Log-Dateien ---
+*.log
+
+# --- Native / C++ (falls du das später nutzt) ---
+.externalNativeBuild
+.cxx
