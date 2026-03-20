@@ -1,114 +1,68 @@
 package com.deinname.mixersreise.viewmodel
 
 import android.annotation.SuppressLint
+import android.location.Location
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.deinname.mixersreise.data.*
-import com.google.android.gms.location.FusedLocationProviderClient
+import com.deinname.mixersreise.data.SettingsManager
+import com.deinname.mixersreise.data.TravelDao
+import com.deinname.mixersreise.data.TravelPoint
+import com.deinname.mixersreise.logic.* import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-enum class ToolType { HAND, SPONGE, FOOD, COKE, TALK }
-
 class MixerViewModel(
-    private val settings: SettingsManager,
-    private val travelDao: TravelDao,
-    private val fusedLocationClient: FusedLocationProviderClient
+    private val settings: SettingsManager?,
+    private val travelDao: TravelDao?,
+    private val fusedLocationClient: FusedLocationProviderClient?
 ) : ViewModel() {
 
-    // --- Status Werte ---
-    var totalHearts by mutableStateOf(settings.totalHearts)
-    var droolAlpha by mutableStateOf(0f)
-    var currentMultiplier by mutableStateOf(1.0f)
-
-    // --- Knuddel Logik ---
+    val activeErrors = mutableStateListOf<MixerError>()
+    var totalHearts by mutableIntStateOf(settings?.totalHearts ?: 0)
+    var hunger by mutableFloatStateOf(100f)
+    var droolAlpha by mutableFloatStateOf(0f)
+    var currentMultiplier by mutableFloatStateOf(1.0f)
     var isPettingWanted by mutableStateOf(false)
-    var petCount by mutableStateOf(0)
-    val MAX_PETS = 15 // Val, damit UI darauf zugreifen kann
-
-    // --- Dialog System ---
+    var petCount by mutableIntStateOf(0)
+    val MAX_PETS = 15
     var activeDialog by mutableStateOf<MixerDialog?>(null)
     var mixerResponseText by mutableStateOf("")
 
+    private var strategy: MixerDataStrategy = if (settings?.isTestModeActive == true) TestModeStrategy() else RealModeStrategy()
     val level get() = (totalHearts / 1000) + 1
-    val isBaby get() = level < 5
 
     init {
         updateLocationMultiplier()
     }
 
-    @SuppressLint("MissingPermission")
-    fun updateLocationMultiplier() {
-        fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
-            loc?.let {
-                // ... (Distanzberechnung bleibt gleich wie zuvor)
-                currentMultiplier = 1.0f // Platzhalter
-            }
-        }
-    }
-
-    fun triggerPettingDesire() {
-        if (!isPettingWanted) {
-            isPettingWanted = true
-            petCount = 0
-            mixerResponseText = "" // Alten Text löschen
-        }
-    }
-
+    // Diese Funktion braucht deine Toolbar!
     fun isToolEnabled(tool: ToolType): Boolean = when(tool) {
         ToolType.HAND -> isPettingWanted
         ToolType.SPONGE -> droolAlpha > 0.1f
         else -> true
     }
 
+    @SuppressLint("MissingPermission")
+    fun updateLocationMultiplier() {
+        fusedLocationClient?.lastLocation?.addOnSuccessListener { loc ->
+            loc?.let {
+                val results = FloatArray(1)
+                Location.distanceBetween(50.9375, 6.9603, it.latitude, it.longitude, results)
+                currentMultiplier = if (results[0] > 50000) 5.0f else 1.0f
+            }
+        }
+    }
+
     fun useTool(tool: ToolType, city: String) {
-        if (!isToolEnabled(tool)) return
-
-        if (tool == ToolType.HAND) {
-            petCount++
-            addHearts(5, city)
-
-            if (petCount >= MAX_PETS) {
-                isPettingWanted = false
-                // Die Sprechblase triggern
-                showTemporaryMessage("Vielen Dank! Jetzt bin ich ordentlich durchgekuschelt. 😊")
-            }
-        } else if (tool == ToolType.TALK) {
-            activeDialog = MixerDialog("Mir ist langweilig!", listOf("Witz" to "Haha! 😂", "Reise" to "Au ja! ✈️"))
-        } else {
-            addHearts(20, city)
-        }
-    }
-
-    private fun showTemporaryMessage(message: String) {
-        mixerResponseText = message
+        val basePoints = if (tool == ToolType.HAND) 5 else 20
+        totalHearts += basePoints
         viewModelScope.launch {
-            delay(7000) // 7 Sekunden warten, passt zum gemütlichen Look
-            if (mixerResponseText == message) {
-                mixerResponseText = ""
-                petCount = 0 // Counter erst nach Sprechblase resetten
-            }
-        }
-    }
-
-    private fun addHearts(base: Int, city: String) {
-        val final = (base * currentMultiplier).toInt()
-        totalHearts += final
-        settings.totalHearts = totalHearts
-        viewModelScope.launch {
-            travelDao.insertPoint(TravelPoint(cityName = city, latitude = 0.0, longitude = 0.0, heartsCollected = final))
+            travelDao?.insertPoint(TravelPoint(cityName = city, heartsCollected = basePoints, latitude = 0.0, longitude = 0.0))
         }
     }
 
     fun onSpongeStroke() {
-        droolAlpha = (droolAlpha - 0.1f).coerceAtLeast(0f)
-        if (droolAlpha <= 0f) useTool(ToolType.SPONGE, "Zuhause")
-    }
-
-    fun selectDialogOption(reaction: String) {
-        mixerResponseText = ""
-        activeDialog = null
-        showTemporaryMessage(reaction)
+        droolAlpha = (droolAlpha - 0.15f).coerceAtLeast(0f)
     }
 }

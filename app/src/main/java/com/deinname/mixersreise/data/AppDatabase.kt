@@ -9,7 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [TravelPoint::class], version = 1, exportSchema = false)
+// Wir importieren hier nichts extra, da alles im selben Package 'data' liegt.
+// Das verhindert die "Unresolved Reference" Fehler.
+
+@Database(entities = [TravelPoint::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun travelDao(): TravelDao
 
@@ -24,17 +27,21 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mixer_database"
                 )
+                    .fallbackToDestructiveMigration() // WICHTIG: Löscht alte DB-Reste bei Fehlern
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            // Initial-Daten beim ersten Start laden
-                            INSTANCE?.let { database ->
-                                scope.launch(Dispatchers.IO) {
-                                    val dao = database.travelDao()
-                                    dao.insertPoint(TravelPoint(cityName = "Köln (Home)", latitude = 50.9375, longitude = 6.9603, heartsCollected = 100))
-                                    dao.insertPoint(TravelPoint(cityName = "New York", latitude = 40.7128, longitude = -74.0060, heartsCollected = 500))
-                                    dao.insertPoint(TravelPoint(cityName = "Seoul", latitude = 37.5665, longitude = 126.9780, heartsCollected = 800))
-                                }
+                            // Der Trick: Wir warten nicht auf INSTANCE, sondern nutzen den Scope
+                            scope.launch(Dispatchers.IO) {
+                                // Wir holen uns die Instanz hier frisch, wenn sie fertig ist
+                                INSTANCE?.travelDao()?.insertPoint(
+                                    TravelPoint(
+                                        cityName = "Heimat",
+                                        heartsCollected = 100,
+                                        latitude = 50.9375,
+                                        longitude = 6.9603
+                                    )
+                                )
                             }
                         }
                     })

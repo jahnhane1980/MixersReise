@@ -7,8 +7,8 @@ import androidx.room.PrimaryKey
 data class TravelPoint(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val cityName: String,
+    val heartsCollected: Int,
     val latitude: Double,
     val longitude: Double,
-    val heartsCollected: Int,
     val timestamp: Long = System.currentTimeMillis()
 )
