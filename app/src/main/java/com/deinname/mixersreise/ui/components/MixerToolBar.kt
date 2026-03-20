@@ -1,28 +1,43 @@
 package com.deinname.mixersreise.ui.components
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-// DIE ENTSCHEIDENDEN IMPORTS:
+import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.ToolType
 
 @Composable
 fun MixerToolBar(viewModel: MixerViewModel) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Button(
-            onClick = { viewModel.useTool(ToolType.FOOD, "Küche") },
-            enabled = viewModel.isToolEnabled(ToolType.FOOD)
-        ) { Text("Essen") }
-
-        Button(
-            onClick = { viewModel.useTool(ToolType.HAND, "Wohnzimmer") },
-            enabled = viewModel.isToolEnabled(ToolType.HAND)
-        ) { Text("Streicheln") }
+        ToolButton(R.drawable.tool_food, ToolType.FOOD, viewModel)
+        ToolButton(R.drawable.tool_hand, ToolType.HAND, viewModel)
+        ToolButton(R.drawable.tool_sponge, ToolType.SPONGE, viewModel)
+        ToolButton(R.drawable.tool_talk, ToolType.TALK, viewModel)
     }
+}
+
+@Composable
+fun ToolButton(iconRes: Int, tool: ToolType, viewModel: MixerViewModel) {
+    val isEnabled = viewModel.isToolEnabled(tool)
+    Image(
+        painter = painterResource(id = iconRes),
+        contentDescription = null,
+        modifier = Modifier
+            .size(48.dp)
+            .alpha(if (isEnabled) 1f else 0.3f)
+            .clickable(enabled = isEnabled) {
+                viewModel.useTool(tool, "Heimatstadt")
+            }
+    )
 }

@@ -8,8 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelPoint
-import com.deinname.mixersreise.logic.* import com.google.android.gms.location.FusedLocationProviderClient
-import kotlinx.coroutines.delay
+import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.launch
 
 class MixerViewModel(
@@ -18,25 +17,21 @@ class MixerViewModel(
     private val fusedLocationClient: FusedLocationProviderClient?
 ) : ViewModel() {
 
-    val activeErrors = mutableStateListOf<MixerError>()
+    private val logic = MixerLogic()
+
     var totalHearts by mutableIntStateOf(settings?.totalHearts ?: 0)
     var hunger by mutableFloatStateOf(100f)
     var droolAlpha by mutableFloatStateOf(0f)
     var currentMultiplier by mutableFloatStateOf(1.0f)
     var isPettingWanted by mutableStateOf(false)
-    var petCount by mutableIntStateOf(0)
-    val MAX_PETS = 15
-    var activeDialog by mutableStateOf<MixerDialog?>(null)
     var mixerResponseText by mutableStateOf("")
 
-    private var strategy: MixerDataStrategy = if (settings?.isTestModeActive == true) TestModeStrategy() else RealModeStrategy()
-    val level get() = (totalHearts / 1000) + 1
+    val level: Int get() = (totalHearts / 1000) + 1
 
     init {
         updateLocationMultiplier()
     }
 
-    // Diese Funktion braucht deine Toolbar!
     fun isToolEnabled(tool: ToolType): Boolean = when(tool) {
         ToolType.HAND -> isPettingWanted
         ToolType.SPONGE -> droolAlpha > 0.1f
@@ -48,17 +43,32 @@ class MixerViewModel(
         fusedLocationClient?.lastLocation?.addOnSuccessListener { loc ->
             loc?.let {
                 val results = FloatArray(1)
-                Location.distanceBetween(50.9375, 6.9603, it.latitude, it.longitude, results)
+                Location.distanceBetween(
+                    settings?.homeLat?.toDouble() ?: 50.9375,
+                    settings?.homeLng?.toDouble() ?: 6.9603,
+                    it.latitude, it.longitude, results
+                )
                 currentMultiplier = if (results[0] > 50000) 5.0f else 1.0f
             }
         }
     }
 
     fun useTool(tool: ToolType, city: String) {
+        mixerResponseText = logic.getMixerResponse(tool, isPettingWanted)
         val basePoints = if (tool == ToolType.HAND) 5 else 20
-        totalHearts += basePoints
+        val gained = (basePoints * currentMultiplier).toInt()
+        totalHearts += gained
+        settings?.totalHearts = totalHearts
+
         viewModelScope.launch {
-            travelDao?.insertPoint(TravelPoint(cityName = city, heartsCollected = basePoints, latitude = 0.0, longitude = 0.0))
+            travelDao?.insertPoint(
+                TravelPoint(
+                    cityName = city,
+                    heartsCollected = gained,
+                    latitude = 0.0,
+                    longitude = 0.0
+                )
+            )
         }
     }
 

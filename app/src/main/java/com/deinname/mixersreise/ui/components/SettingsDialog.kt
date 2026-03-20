@@ -5,104 +5,82 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-// Diese Imports müssen exakt zu deiner Ordnerstruktur passen
 import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.viewmodel.MixerViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsDialog(
-    settings: SettingsManager,
-    viewModel: MixerViewModel,
-    onDismiss: () -> Unit
-) {
-    // Lokale States für die Textfelder
+fun SettingsDialog(settings: SettingsManager, onDismiss: () -> Unit) {
+    // Lokale Zustände für die Textfelder (Strings)
     var userName by remember { mutableStateOf(settings.userName) }
     var homeAddress by remember { mutableStateOf(settings.homeAddress) }
     var googleApiKey by remember { mutableStateOf(settings.googleApiKey) }
     var googleMapId by remember { mutableStateOf(settings.googleMapId) }
     var isTestMode by remember { mutableStateOf(settings.isTestModeActive) }
 
+    // Koordinaten müssen als String im Textfeld stehen
+    var homeLat by remember { mutableStateOf(settings.homeLat.toString()) }
+    var homeLng by remember { mutableStateOf(settings.homeLng.toString()) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Einstellungen & Profil") },
+        title = { Text("Einstellungen") },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Sektion: Benutzer
                 OutlinedTextField(
                     value = userName,
                     onValueChange = { userName = it },
-                    label = { Text("Dein Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Benutzername") }
                 )
-
                 OutlinedTextField(
                     value = homeAddress,
                     onValueChange = { homeAddress = it },
-                    label = { Text("Mixers Zuhause (Startpunkt)") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Heimatadresse") }
                 )
-
-                HorizontalDivider()
-
-                // Sektion: Google Maps API
-                Text("Developer / Maps Config", style = MaterialTheme.typography.labelLarge)
-
+                OutlinedTextField(
+                    value = homeLat,
+                    onValueChange = { homeLat = it },
+                    label = { Text("Heimat Breitengrad (Lat)") }
+                )
+                OutlinedTextField(
+                    value = homeLng,
+                    onValueChange = { homeLng = it },
+                    label = { Text("Heimat Längengrad (Lng)") }
+                )
                 OutlinedTextField(
                     value = googleApiKey,
                     onValueChange = { googleApiKey = it },
-                    label = { Text("Google Maps API Key") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Google API Key") }
                 )
-
                 OutlinedTextField(
                     value = googleMapId,
                     onValueChange = { googleMapId = it },
-                    label = { Text("Google Maps Style ID") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = { Text("Google Map ID") }
                 )
-
-                HorizontalDivider()
-
-                // Sektion: Test-System
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Test-Modus aktiv", style = MaterialTheme.typography.bodyLarge)
-                        Text("Sofort-Effekte & Highscore", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Switch(
-                        checked = isTestMode,
-                        onCheckedChange = {
-                            isTestMode = it
-                            viewModel.toggleTestMode(it)
-                        }
-                    )
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Checkbox(checked = isTestMode, onCheckedChange = { isTestMode = it })
+                    Text("Testmodus aktiv")
                 }
             }
         },
         confirmButton = {
             Button(onClick = {
-                // Daten final im SettingsManager speichern
+                // Speichern im Manager mit Konvertierung
                 settings.userName = userName
                 settings.homeAddress = homeAddress
                 settings.googleApiKey = googleApiKey
                 settings.googleMapId = googleMapId
-                // Der Testmodus wird bereits über das ViewModel/Switch oben gesteuert
+                settings.isTestModeActive = isTestMode
+
+                // Sicher von String zu Float konvertieren
+                settings.homeLat = homeLat.toFloatOrNull() ?: 0f
+                settings.homeLng = homeLng.toFloatOrNull() ?: 0f
+
                 onDismiss()
             }) {
                 Text("Speichern")

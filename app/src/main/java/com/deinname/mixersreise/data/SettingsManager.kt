@@ -1,44 +1,37 @@
 package com.deinname.mixersreise.data
 
-import android.content.Context
-import android.content.SharedPreferences
-import kotlin.reflect.KProperty
+class SettingsManager(context: android.content.Context) {
+    private val prefs = context.getSharedPreferences("mixer_prefs", android.content.Context.MODE_PRIVATE)
 
-class SettingsManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
+    var userName: String
+        get() = prefs.getString("user_name", "Spieler") ?: "Spieler"
+        set(value) = prefs.edit().putString("user_name", value).apply()
 
-    var userName by PrefDelegate(prefs, "user_name", "Entdecßker")
-    var homeAddress by PrefDelegate(prefs, "home_address", "Köln")
-    var homeLat by PrefDelegate(prefs, "home_lat", 50.9375f)
-    var homeLng by PrefDelegate(prefs, "home_lng", 6.9603f)
-    var googleApiKey by PrefDelegate(prefs, "api_key", "")
-    var googleMapId by PrefDelegate(prefs, "map_id", "")
-    var totalHearts by PrefDelegate(prefs, "total_hearts", 0)
-    var notificationSentTime by PrefDelegate(prefs, "notif_time", 0L)
-    var isTestModeActive by PrefDelegate(prefs, "test_mode", false)
-}
+    var homeAddress: String
+        get() = prefs.getString("home_address", "") ?: ""
+        set(value) = prefs.edit().putString("home_address", value).apply()
 
-class PrefDelegate<T>(val prefs: SharedPreferences, val key: String, val default: T) {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-        return when (default) {
-            is String -> prefs.getString(key, default) as T
-            is Int -> prefs.getInt(key, default) as T
-            is Float -> prefs.getFloat(key, default) as T
-            is Long -> prefs.getLong(key, default) as T
-            is Boolean -> prefs.getBoolean(key, default) as T
-            else -> default
-        }
-    }
-    operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-        with(prefs.edit()) {
-            when (value) {
-                is String -> putString(key, value)
-                is Int -> putInt(key, value)
-                is Float -> putFloat(key, value)
-                is Long -> putLong(key, value)
-                is Boolean -> putBoolean(key, value)
-            }
-            apply()
-        }
-    }
+    var googleApiKey: String
+        get() = prefs.getString("google_api_key", "") ?: ""
+        set(value) = prefs.edit().putString("google_api_key", value).apply()
+
+    var googleMapId: String
+        get() = prefs.getString("google_map_id", "") ?: ""
+        set(value) = prefs.edit().putString("google_map_id", value).apply()
+
+    var isTestModeActive: Boolean
+        get() = prefs.getBoolean("is_test_mode", false)
+        set(value) = prefs.edit().putBoolean("is_test_mode", value).apply()
+
+    var totalHearts: Int
+        get() = prefs.getInt("total_hearts", 0)
+        set(value) = prefs.edit().putInt("total_hearts", value).apply()
+
+    var homeLat: Float
+        get() = prefs.getFloat("home_lat", 50.9375f)
+        set(value) = prefs.edit().putFloat("home_lat", value).apply()
+
+    var homeLng: Float
+        get() = prefs.getFloat("home_lng", 6.9603f)
+        set(value) = prefs.edit().putFloat("home_lng", value).apply()
 }
