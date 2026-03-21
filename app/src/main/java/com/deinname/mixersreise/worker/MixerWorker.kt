@@ -10,19 +10,15 @@ class MixerWorker(
     workerParams: WorkerParameters
 ) : Worker(context, workerParams) {
 
+    private val settingsManager = SettingsManager(context)
+
     override fun doWork(): Result {
-        val settings = SettingsManager(applicationContext)
+        // Beispiel-Logik: Mixer bekommt im Hintergrund Hunger/Sabber
+        // Wir nutzen hier direkt die totalHearts Variable des SettingsManagers
+        val currentHearts = settingsManager.totalHearts
 
-        // FAKTEN-CHECK: Dein SettingsManager nutzt getHearts() und saveHearts()
-        // Wir laden den aktuellen Wert, verringern ihn (Beispiel-Logik für Hunger/Vernachlässigung)
-        // und speichern ihn wieder ab.
-
-        val currentHearts = settings.getHearts()
-
-        // Beispiel: Mixer verliert über Zeit Herzen, wenn man sich nicht kümmert
-        if (currentHearts > 0) {
-            settings.saveHearts(currentHearts - 1)
-        }
+        // Hier könnte später die Logik rein: Wenn 1 Stunde vergangen, Herzen -5
+        // settingsManager.totalHearts = (currentHearts - 5).coerceAtLeast(0)
 
         return Result.success()
     }

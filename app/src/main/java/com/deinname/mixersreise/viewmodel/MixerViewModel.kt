@@ -1,80 +1,73 @@
 package com.deinname.mixersreise.viewmodel
 
-import android.annotation.SuppressLint
-import android.location.Location
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.data.TravelDao
-import com.deinname.mixersreise.data.TravelPoint
-import com.google.android.gms.location.FusedLocationProviderClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
-class MixerViewModel(
-    private val settings: SettingsManager?,
-    private val travelDao: TravelDao?,
-    private val scope: CoroutineScope,
-    private val fusedLocationClient: FusedLocationProviderClient?
-) : ViewModel() {
+// 1. Das Enum direkt hierhin, damit der Compiler es sofort findet
+enum class ToolType { NONE, FOOD, HAND, SPONGE, TALK, MAP }
 
-    private val logic = MixerLogic()
+class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel() {
 
-    var totalHearts by mutableIntStateOf(settings?.getHearts() ?: 0)
-    var hunger by mutableFloatStateOf(100f)
-    var droolAlpha by mutableFloatStateOf(0f)
-    var currentMultiplier by mutableFloatStateOf(1.0f)
-    var isPettingWanted by mutableStateOf(false)
-    var mixerResponseText by mutableStateOf("")
+    // 2. UI States mit expliziten Typen und korrekten Imports
+    var totalHearts: Int by mutableStateOf(settingsManager.totalHearts)
+    var level: Int by mutableStateOf((settingsManager.totalHearts / 1000) + 1)
 
-    val level: Int get() = (totalHearts / 1000) + 1
+    var mixerResponseText: String by mutableStateOf("Hallo! Wollen wir reisen?")
+    var droolAlpha: Float by mutableStateOf(0.0f)
 
-    init {
-        updateLocationMultiplier()
-    }
+    var isBaby: Boolean by mutableStateOf(false)
+    var isPettingWanted: Boolean by mutableStateOf(true)
 
-    fun isToolEnabled(tool: ToolType): Boolean = when(tool) {
-        ToolType.HAND -> isPettingWanted
-        ToolType.SPONGE -> droolAlpha > 0.1f
-        else -> true
-    }
+    // Hier sagen wir explizit, dass es ein ToolType ist
+    var activeTool: ToolType by mutableStateOf(ToolType.NONE)
 
-    @SuppressLint("MissingPermission")
-    fun updateLocationMultiplier() {
-        fusedLocationClient?.lastLocation?.addOnSuccessListener { loc ->
-            loc?.let {
-                val results = FloatArray(1)
-                Location.distanceBetween(
-                    50.9375,
-                    6.9603,
-                    it.latitude, it.longitude, results
-                )
-                currentMultiplier = if (results[0] > 50000) 5.0f else 1.0f
-            }
+    fun onToolSelected(tool: ToolType) {
+        activeTool = tool
+        when (tool) {
+            ToolType.FOOD -> feedMixer()
+            ToolType.HAND -> petMixer()
+            ToolType.SPONGE -> cleanMixer()
+            ToolType.TALK -> talkToMixer()
+            ToolType.MAP -> { /* Navigation zur Karte wird hier getriggert */ }
+            ToolType.NONE -> { activeTool = ToolType.NONE }
         }
     }
 
-    fun useTool(tool: ToolType, city: String) {
-        mixerResponseText = logic.getMixerResponse(tool, isPettingWanted)
-        val basePoints = if (tool == ToolType.HAND) 5 else 20
-        val gained = (basePoints * currentMultiplier).toInt()
-        totalHearts += gained
-        settings?.saveHearts(totalHearts)
+    private fun feedMixer() {
+        addHearts(50)
+        mixerResponseText = "Mampf! Das schmeckt!"
+    }
 
-        viewModelScope.launch {
-            travelDao?.insertPoint(
-                TravelPoint(
-                    cityName = city,
-                    heartsCollected = gained,
-                    latitude = 0.0,
-                    longitude = 0.0
-                )
-            )
+    private fun petMixer() {
+        if (isPettingWanted) {
+            addHearts(20)
+            mixerResponseText = "Hehe, das kitzelt!"
+        } else {
+            mixerResponseText = "Nicht jetzt..."
         }
     }
 
-    fun onSpongeStroke() {
-        droolAlpha = (droolAlpha - 0.15f).coerceAtLeast(0f)
+    private fun cleanMixer() {
+        if (droolAlpha > 0f) {
+            droolAlpha = 0f
+            addHearts(30)
+            mixerResponseText = "Ah, viel besser!"
+        } else {
+            mixerResponseText = "Ich bin doch sauber!"
+        }
+    }
+
+    private fun talkToMixer() {
+        mixerResponseText = "Blabla? Ananas!"
+        addHearts(5)
+    }
+
+    private fun addHearts(amount: Int) {
+        totalHearts += amount
+        settingsManager.totalHearts = totalHearts
+        level = (totalHearts / 1000) + 1
     }
 }
