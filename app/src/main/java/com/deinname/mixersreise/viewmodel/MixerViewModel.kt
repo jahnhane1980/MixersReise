@@ -9,17 +9,19 @@ import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelPoint
 import com.google.android.gms.location.FusedLocationProviderClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class MixerViewModel(
     private val settings: SettingsManager?,
     private val travelDao: TravelDao?,
+    private val scope: CoroutineScope,
     private val fusedLocationClient: FusedLocationProviderClient?
 ) : ViewModel() {
 
     private val logic = MixerLogic()
 
-    var totalHearts by mutableIntStateOf(settings?.totalHearts ?: 0)
+    var totalHearts by mutableIntStateOf(settings?.getHearts() ?: 0)
     var hunger by mutableFloatStateOf(100f)
     var droolAlpha by mutableFloatStateOf(0f)
     var currentMultiplier by mutableFloatStateOf(1.0f)
@@ -44,8 +46,8 @@ class MixerViewModel(
             loc?.let {
                 val results = FloatArray(1)
                 Location.distanceBetween(
-                    settings?.homeLat?.toDouble() ?: 50.9375,
-                    settings?.homeLng?.toDouble() ?: 6.9603,
+                    50.9375,
+                    6.9603,
                     it.latitude, it.longitude, results
                 )
                 currentMultiplier = if (results[0] > 50000) 5.0f else 1.0f
@@ -58,7 +60,7 @@ class MixerViewModel(
         val basePoints = if (tool == ToolType.HAND) 5 else 20
         val gained = (basePoints * currentMultiplier).toInt()
         totalHearts += gained
-        settings?.totalHearts = totalHearts
+        settings?.saveHearts(totalHearts)
 
         viewModelScope.launch {
             travelDao?.insertPoint(

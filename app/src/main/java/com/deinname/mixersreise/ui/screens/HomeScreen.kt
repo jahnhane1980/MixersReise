@@ -1,10 +1,8 @@
 package com.deinname.mixersreise.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-// WICHTIG: Diese Imports verknüpfen deine Bausteine
 import com.deinname.mixersreise.MixerWorldScreen
 import com.deinname.mixersreise.ui.components.MixerTopBar
 import com.deinname.mixersreise.ui.components.MixerToolBar
@@ -16,26 +14,24 @@ fun HomeScreen(
     onOpenMap: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            MixerTopBar(
-                level = viewModel.level,
-                hearts = viewModel.totalHearts,
-                onOpenMap = onOpenMap,
-                onOpenSettings = onOpenSettings
-            )
-        },
-        bottomBar = {
-            MixerToolBar(viewModel = viewModel)
-        }
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        MixerTopBar(
+            level = viewModel.level,
+            hearts = viewModel.totalHearts,
+            onOpenMap = onOpenMap,
+            onOpenSettings = onOpenSettings
+        )
+
         Box(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
+                .weight(1f)
+                .fillMaxWidth()
         ) {
-            // Hier wird das Zimmer mit Mixer angezeigt
             MixerWorldScreen(viewModel = viewModel)
         }
+
+        MixerToolBar(viewModel = viewModel)
     }
 }

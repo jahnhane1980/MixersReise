@@ -3,56 +3,55 @@ package com.deinname.mixersreise
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.lifecycleScope
-import com.deinname.mixersreise.data.SettingsManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.deinname.mixersreise.data.AppDatabase
-import com.deinname.mixersreise.ui.components.MixerTopBar
-import com.deinname.mixersreise.ui.components.MixerToolBar
-import com.deinname.mixersreise.viewmodel.MixerViewModel
+import com.deinname.mixersreise.data.SettingsManager
+import com.deinname.mixersreise.ui.screens.HomeScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
+import com.deinname.mixersreise.viewmodel.MixerViewModel
+import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
 import com.google.android.gms.location.LocationServices
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialisierung
-        val settings = SettingsManager(this)
-        val database = AppDatabase.getDatabase(this, lifecycleScope)
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        // 1. Scope definieren, damit er für die Datenbank verfügbar ist
+        val scope = lifecycleScope
+
+        // 2. Datenbank-Instanz mit Context UND Scope initialisieren
+        val database = AppDatabase.getDatabase(this, scope)
+        val travelDao = database.travelDao()
+
+        val settingsManager = SettingsManager(this)
+        val locationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setContent {
             MixersReiseTheme {
-                val mixerViewModel: MixerViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return MixerViewModel(settings, database.travelDao(), fusedLocationClient) as T
-                        }
-                    }
-                )
-
-                Scaffold(
-                    topBar = {
-                        MixerTopBar(
-                            level = mixerViewModel.level,
-                            hearts = mixerViewModel.totalHearts,
-                            onOpenMap = { },
-                            onOpenSettings = { }
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // 3. ViewModel-Initialisierung
+                    val mixerViewModel: MixerViewModel = viewModel(
+                        factory = MixerViewModelFactory(
+                            travelDao = travelDao,
+                            settingsManager = settingsManager,
+                            scope = scope,
+                            locationClient = locationClient
                         )
-                    }
-                ) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            // Hier kommt dein MixerWorldScreen rein, falls vorhanden
-                        }
-                        MixerToolBar(viewModel = mixerViewModel)
-                    }
+                    )
+
+                    HomeScreen(
+                        viewModel = mixerViewModel,
+                        onOpenMap = { },
+                        onOpenSettings = { }
+                    )
                 }
             }
         }
