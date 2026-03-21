@@ -1,34 +1,29 @@
 package com.deinname.mixersreise.worker
 
 import android.content.Context
-import androidx.work.CoroutineWorker
+import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.deinname.mixersreise.data.SettingsManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 class MixerWorker(
-    appContext: Context,
+    context: Context,
     workerParams: WorkerParameters
-) : CoroutineWorker(appContext, workerParams) {
+) : Worker(context, workerParams) {
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        try {
-            // SettingsManager initialisieren
-            val settings = SettingsManager(applicationContext)
+    override fun doWork(): Result {
+        val settings = SettingsManager(applicationContext)
 
-            // Logik für Hunger und Herzen im Hintergrund
-            // Hier greifen wir auf die Variablen zu, die wir im Manager fixiert haben
-            val currentHearts = settings.totalHearts
+        // FAKTEN-CHECK: Dein SettingsManager nutzt getHearts() und saveHearts()
+        // Wir laden den aktuellen Wert, verringern ihn (Beispiel-Logik für Hunger/Vernachlässigung)
+        // und speichern ihn wieder ab.
 
-            // Beispiel: Hunger steigt über Zeit (falls du das Feld im Manager hast)
-            // settings.hunger = (settings.hunger - 5f).coerceAtLeast(0f)
+        val currentHearts = settings.getHearts()
 
-            // Wenn alles glatt lief
-            Result.success()
-        } catch (e: Exception) {
-            // Bei Fehlern (z.B. Manager nicht findbar)
-            Result.failure()
+        // Beispiel: Mixer verliert über Zeit Herzen, wenn man sich nicht kümmert
+        if (currentHearts > 0) {
+            settings.saveHearts(currentHearts - 1)
         }
+
+        return Result.success()
     }
 }
