@@ -5,56 +5,61 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.ui.components.MixerSpeechBubble
+import com.deinname.mixersreise.ui.components.SafeImage
+import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
 fun MixerWorldScreen(viewModel: MixerViewModel) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Hintergrundbild
-        Image(
-            painter = painterResource(id = R.drawable.bg_bedroom_plushies),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+    // Wir extrahieren die Werte aus den States für eine sauberere Verwendung
+    val speechText = viewModel.speechText.value
+    val droolAlpha = viewModel.droolAlpha.value
+    val isSleeping = viewModel.isSleeping.value
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        // Hintergrund
+        SafeImage(
+            resId = R.drawable.bg_bedroom_plushies,
+            contentDescription = "Hintergrund",
+            modifier = Modifier.fillMaxSize()
         )
 
-        // 2. Mixer und Sprechblase (Am unteren Rand ausgerichtet)
+        // Mixer Darstellung
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Sprechblase
-            if (viewModel.mixerResponseText.isNotEmpty()) {
-                MixerSpeechBubble(text = viewModel.mixerResponseText)
+            // Sprechblase - Nutzt jetzt speechText (vorher mixerResponseText)
+            if (speechText.isNotEmpty()) {
+                MixerSpeechBubble(text = speechText)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Der Charakter Mixer (Pferd)
-            Image(
-                painter = painterResource(id = R.drawable.mixer_idle),
-                contentDescription = "Mixer Charakter",
-                modifier = Modifier.size(280.dp)
-            )
+            Box(contentAlignment = Alignment.Center) {
+                // Hauptbild des Mixers
+                SafeImage(
+                    resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
+                    contentDescription = "Mixer",
+                    modifier = Modifier.size(300.dp)
+                )
 
-            // Abstandshalter nach unten (schiebt Mixer ein Stück hoch von der Toolbar)
-            // Verringere diesen Wert (z.B. auf 10.dp), wenn er noch tiefer soll.
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-
-        // 3. Sabber-Overlay (Korrigiert auf droolAlpha)
-        if (viewModel.droolAlpha > 0f) {
-            Image(
-                painter = painterResource(id = R.drawable.overlay_drool),
-                contentDescription = "Sabber",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-                alpha = viewModel.droolAlpha
-            )
+                // Schmodder-Overlay
+                // Korrektur: Vergleich auf .value (jetzt oben extrahiert)
+                if (droolAlpha > 0f) {
+                    Image(
+                        painter = painterResource(id = R.drawable.overlay_drool),
+                        contentDescription = "Schmodder",
+                        modifier = Modifier.size(300.dp),
+                        // Korrektur: Übergabe des Float-Werts, nicht des States
+                        alpha = droolAlpha
+                    )
+                }
+            }
         }
     }
 }

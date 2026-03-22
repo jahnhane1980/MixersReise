@@ -1,13 +1,17 @@
 package com.deinname.mixersreise.viewmodel
 
-class MixerLogic {
-    fun getMixerResponse(tool: ToolType, isPettingWanted: Boolean): String {
-        return when (tool) {
-            ToolType.FOOD -> "Mampf! Das schmeckt!"
-            ToolType.HAND -> if (isPettingWanted) "Hehe, das kitzelt!" else "Lass das!"
-            ToolType.SPONGE -> "Ah, viel besser!"
-            ToolType.TALK -> "Blabla? Ananas!"
-            else -> ""
-        }
+// KORREKTUR: Import des Enums aus dem Komponenten-Package
+import com.deinname.mixersreise.ui.components.ToolType
+
+fun handleMixerAction(
+    activeTool: ToolType,
+    viewModel: MixerViewModel
+) {
+    when (activeTool) {
+        ToolType.FOOD -> viewModel.feedMixer()
+        ToolType.HAND -> viewModel.petMixer()
+        ToolType.SPONGE -> viewModel.cleanMixer()
+        ToolType.TALK -> viewModel.talkToMixer()
+        else -> { /* Keine Aktion für NONE oder MAP an dieser Stelle */ }
     }
 }

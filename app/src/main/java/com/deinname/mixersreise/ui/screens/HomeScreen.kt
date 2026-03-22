@@ -1,167 +1,114 @@
 package com.deinname.mixersreise.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import com.deinname.mixersreise.MixerWorldScreen
 import com.deinname.mixersreise.R
-import com.deinname.mixersreise.ui.components.MixerTopBar
-import com.deinname.mixersreise.ui.components.MixerToolBar
+import com.deinname.mixersreise.ui.components.SafeImage
+import com.deinname.mixersreise.ui.components.ToolType
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
-fun HomeScreen(
-    viewModel: MixerViewModel,
-    onOpenSettings: () -> Unit
-) {
-    var showMapDialog by remember { mutableStateOf(false) }
+fun HomeScreen(viewModel: MixerViewModel) {
+    val activeTool = viewModel.activeTool.value
+    val speechText = viewModel.speechText.value
+    val droolAlpha = viewModel.droolAlpha.value
+    val isSleeping = viewModel.isSleeping.value
+    val touchPos = viewModel.touchPosition.value
 
-    Scaffold(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            MixerTopBar(
-                level = viewModel.level,
-                hearts = viewModel.totalHearts,
-                onOpenMap = { showMapDialog = true },
-                onOpenSettings = onOpenSettings
-            )
-        },
-        bottomBar = {
-            MixerToolBar(viewModel = viewModel)
-        }
-    ) { paddingValues ->
+        contentAlignment = Alignment.Center
+    ) {
+        // Hintergrund
+        SafeImage(
+            resId = R.drawable.bg_bedroom_plushies,
+            contentDescription = "Schlafzimmer Hintergrund",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop // Funktioniert jetzt durch Update oben
+        )
+
+        // Interaktions-Bereich des Mixers
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+                .size(300.dp)
+                .pointerInput(activeTool) {
+                    detectTapGestures(
+                        onPress = { offset ->
+                            viewModel.updateTouchPosition(offset)
+                            tryAwaitRelease()
+                            viewModel.updateTouchPosition(null)
+                        },
+                        onTap = {
+                            when (activeTool) {
+                                ToolType.FOOD -> viewModel.feedMixer()
+                                ToolType.HAND -> viewModel.petMixer()
+                                ToolType.SPONGE -> viewModel.cleanMixer()
+                                ToolType.TALK -> viewModel.talkToMixer()
+                                else -> {}
+                            }
+                        }
+                    )
+                }
+                .pointerInput(activeTool) {
+                    detectDragGestures(
+                        onDragStart = { offset -> viewModel.updateTouchPosition(offset) },
+                        onDragEnd = { viewModel.updateTouchPosition(null) },
+                        onDragCancel = { viewModel.updateTouchPosition(null) },
+                        onDrag = { change, _ ->
+                            viewModel.updateTouchPosition(change.position)
+                        }
+                    )
+                }
         ) {
-            MixerWorldScreen(viewModel = viewModel)
+            // Mixer Bild
+            SafeImage(
+                resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
+                contentDescription = "Mixer",
+                modifier = Modifier.fillMaxSize()
+            )
 
-            if (showMapDialog) {
-                TravelTableDialog(
-                    onDismiss = { showMapDialog = false },
-                    viewModel = viewModel
+            // Schmodder-Overlay
+            if (droolAlpha > 0f) {
+                SafeImage(
+                    resId = R.drawable.overlay_drool,
+                    contentDescription = "Schmodder",
+                    modifier = Modifier.fillMaxSize(),
+                    alpha = droolAlpha // Funktioniert jetzt durch Update oben
                 )
             }
-        }
-    }
-}
 
-@Composable
-fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(24.dp),
-            color = Color.Black
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Hintergrundbild
-                Image(
-                    painter = painterResource(id = R.drawable.bg_world_map),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
+            // Haptisches Icon am Touch-Punkt
+            if (activeTool != ToolType.NONE && touchPos != null) {
+                val toolIconRes = when (activeTool) {
+                    ToolType.FOOD -> R.drawable.tool_food
+                    ToolType.HAND -> R.drawable.tool_hand
+                    ToolType.SPONGE -> R.drawable.tool_sponge
+                    ToolType.TALK -> R.drawable.tool_talk
+                    else -> null
+                }
 
-                // Tabelle auf halbtransparentem Weiß
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
-                        .background(
-                            Color.White.copy(alpha = 0.75f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Mixers Reiseziele",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.Black
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Header
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Herzchen", style = MaterialTheme.typography.titleMedium, color = Color.Black)
-                        Text("Ort", style = MaterialTheme.typography.titleMedium, color = Color.Black)
-                    }
-
-                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp)
-
-                    // Scrollbare Liste
-                    LazyColumn(
-                        modifier = Modifier.weight(1f).fillMaxWidth()
-                    ) {
-                        item {
-                            TravelRow(hearts = "1000", location = "New York")
-                            TravelRow(hearts = "550", location = "Berlin")
-                            TravelRow(hearts = "2100", location = "Tokio")
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Button mit DarkCyan und weißem Text
-                    Button(
-                        onClick = onDismiss,
+                toolIconRes?.let { res ->
+                    Image(
+                        painter = painterResource(id = res),
+                        contentDescription = "Tool Cursor",
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .fillMaxWidth(0.8f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(50),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colorResource(id = R.color.DarkCyan),
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
-                    ) {
-                        Text(
-                            text = "Zurück zur Reise",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
+                            .size(48.dp)
+                            .offset(
+                                x = (touchPos.x / 2.5f).dp,
+                                y = (touchPos.y / 2.5f).dp
+                            )
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TravelRow(hearts: String, location: String) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = hearts, color = Color.DarkGray, style = MaterialTheme.typography.bodyLarge)
-            Text(text = location, color = Color.DarkGray, style = MaterialTheme.typography.bodyLarge)
-        }
-        HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f), thickness = 0.5.dp)
     }
 }

@@ -1,73 +1,84 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
-
-// 1. Das Enum direkt hierhin, damit der Compiler es sofort findet
-enum class ToolType { NONE, FOOD, HAND, SPONGE, TALK, MAP }
+import com.deinname.mixersreise.ui.components.ToolType
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel() {
 
-    // 2. UI States mit expliziten Typen und korrekten Imports
-    var totalHearts: Int by mutableStateOf(settingsManager.totalHearts)
-    var level: Int by mutableStateOf((settingsManager.totalHearts / 1000) + 1)
+    // KORREKTUR: Zugriff über die Property 'totalHearts' (ruft den Getter in SettingsManager auf)
+    private val _totalHearts = mutableStateOf<Int>(settingsManager.totalHearts)
+    val totalHearts: State<Int> = _totalHearts
 
-    var mixerResponseText: String by mutableStateOf("Hallo! Wollen wir reisen?")
-    var droolAlpha: Float by mutableStateOf(0.0f)
+    private val _activeTool = mutableStateOf(ToolType.NONE)
+    val activeTool: State<ToolType> = _activeTool
 
-    var isBaby: Boolean by mutableStateOf(false)
-    var isPettingWanted: Boolean by mutableStateOf(true)
+    private val _isSleeping = mutableStateOf(false)
+    val isSleeping: State<Boolean> = _isSleeping
 
-    // Hier sagen wir explizit, dass es ein ToolType ist
-    var activeTool: ToolType by mutableStateOf(ToolType.NONE)
+    private val _droolAlpha = mutableStateOf(0f)
+    val droolAlpha: State<Float> = _droolAlpha
 
-    fun onToolSelected(tool: ToolType) {
-        activeTool = tool
-        when (tool) {
-            ToolType.FOOD -> feedMixer()
-            ToolType.HAND -> petMixer()
-            ToolType.SPONGE -> cleanMixer()
-            ToolType.TALK -> talkToMixer()
-            ToolType.MAP -> { /* Navigation zur Karte wird hier getriggert */ }
-            ToolType.NONE -> { activeTool = ToolType.NONE }
-        }
+    private val _speechText = mutableStateOf("")
+    val speechText: State<String> = _speechText
+
+    private val _touchPosition = mutableStateOf<Offset?>(null)
+    val touchPosition: State<Offset?> = _touchPosition
+
+    val level: Int
+        get() = (_totalHearts.value / 1000) + 1
+
+    fun selectTool(tool: ToolType) {
+        _activeTool.value = if (_activeTool.value == tool) ToolType.NONE else tool
     }
 
-    private fun feedMixer() {
-        addHearts(50)
-        mixerResponseText = "Mampf! Das schmeckt!"
+    fun updateTouchPosition(offset: Offset?) {
+        _touchPosition.value = offset
     }
 
-    private fun petMixer() {
-        if (isPettingWanted) {
-            addHearts(20)
-            mixerResponseText = "Hehe, das kitzelt!"
-        } else {
-            mixerResponseText = "Nicht jetzt..."
-        }
+    fun feedMixer() {
+        if (_isSleeping.value) return
+        addHearts(10)
+        showSpeech("Mampf! Das schmeckt!")
     }
 
-    private fun cleanMixer() {
-        if (droolAlpha > 0f) {
-            droolAlpha = 0f
-            addHearts(30)
-            mixerResponseText = "Ah, viel besser!"
-        } else {
-            mixerResponseText = "Ich bin doch sauber!"
-        }
-    }
-
-    private fun talkToMixer() {
-        mixerResponseText = "Blabla? Ananas!"
+    fun petMixer() {
+        if (_isSleeping.value) return
         addHearts(5)
+        showSpeech("Ooh, das kitzelt!")
+    }
+
+    fun cleanMixer() {
+        if (_droolAlpha.value > 0f) {
+            _droolAlpha.value = 0f
+            addHearts(20)
+            showSpeech("Endlich wieder sauber!")
+        }
+    }
+
+    fun talkToMixer() {
+        showSpeech("Hallo! Wie geht es dir?")
     }
 
     private fun addHearts(amount: Int) {
-        totalHearts += amount
-        settingsManager.totalHearts = totalHearts
-        level = (totalHearts / 1000) + 1
+        _totalHearts.value += amount
+        // KORREKTUR: Zuweisung an die Property (ruft den Setter in SettingsManager auf)
+        settingsManager.totalHearts = _totalHearts.value
+    }
+
+    private fun showSpeech(text: String) {
+        viewModelScope.launch {
+            _speechText.value = text
+            delay(3000)
+            if (_speechText.value == text) {
+                _speechText.value = ""
+            }
+        }
     }
 }
