@@ -1,7 +1,6 @@
 package com.deinname.mixersreise.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -14,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.components.ToolType
+import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
@@ -26,9 +26,8 @@ fun HomeScreen(viewModel: MixerViewModel) {
 
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomCenter // Mixer nach unten orientieren
+        contentAlignment = Alignment.BottomCenter
     ) {
-        // Hintergrund - Füllt den ganzen Screen
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer Hintergrund",
@@ -36,48 +35,35 @@ fun HomeScreen(viewModel: MixerViewModel) {
             contentScale = ContentScale.Crop
         )
 
-        // Der Mixer-Container
         Box(
             modifier = Modifier
-                .padding(bottom = 80.dp) // Abstand vom unteren Rand (Toolbar-Höhe)
-                .size(350.dp) // Etwas größer für bessere Präsenz
+                .padding(bottom = 100.dp)
+                .size(320.dp)
                 .pointerInput(activeTool) {
                     detectTapGestures(
-                        onPress = { offset ->
+                        onTap = { offset ->
+                            // Setzt die Position (Timer startet im ViewModel)
                             viewModel.updateTouchPosition(offset)
-                            tryAwaitRelease()
-                            viewModel.updateTouchPosition(null)
-                        },
-                        onTap = {
+
+                            // Führt die Aktion aus
                             when (activeTool) {
                                 ToolType.FOOD -> viewModel.feedMixer()
                                 ToolType.HAND -> viewModel.petMixer()
                                 ToolType.SPONGE -> viewModel.cleanMixer()
                                 ToolType.TALK -> viewModel.talkToMixer()
+                                ToolType.COKE -> viewModel.feedMixer()
                                 else -> {}
                             }
                         }
                     )
                 }
-                .pointerInput(activeTool) {
-                    detectDragGestures(
-                        onDragStart = { offset -> viewModel.updateTouchPosition(offset) },
-                        onDragEnd = { viewModel.updateTouchPosition(null) },
-                        onDragCancel = { viewModel.updateTouchPosition(null) },
-                        onDrag = { change, _ ->
-                            viewModel.updateTouchPosition(change.position)
-                        }
-                    )
-                }
         ) {
-            // Mixer Bild
             SafeImage(
                 resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
                 contentDescription = "Mixer",
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Schmodder-Overlay
             if (droolAlpha > 0f) {
                 SafeImage(
                     resId = R.drawable.overlay_drool,
@@ -87,27 +73,33 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 )
             }
 
-            // Haptisches Icon am Touch-Punkt
             if (activeTool != ToolType.NONE && touchPos != null) {
                 val toolIconRes = when (activeTool) {
                     ToolType.FOOD -> R.drawable.tool_food
                     ToolType.HAND -> R.drawable.tool_hand
                     ToolType.SPONGE -> R.drawable.tool_sponge
                     ToolType.TALK -> R.drawable.tool_talk
+                    ToolType.COKE -> R.drawable.tool_coke
                     else -> null
                 }
 
                 toolIconRes?.let { res ->
                     Image(
                         painter = painterResource(id = res),
-                        contentDescription = "Tool Cursor",
+                        contentDescription = "Tool Visual",
                         modifier = Modifier
-                            .size(64.dp) // Cursor etwas größer für bessere Sichtbarkeit
+                            .size(80.dp)
                             .offset(
-                                x = (touchPos.x / 2.5f).dp - 32.dp, // Zentrierung des Icons am Finger
-                                y = (touchPos.y / 2.5f).dp - 32.dp
+                                x = (touchPos.x / 2.5f).dp - 40.dp,
+                                y = (touchPos.y / 2.5f).dp - 40.dp
                             )
                     )
+                }
+            }
+
+            if (speechText.isNotEmpty()) {
+                Box(modifier = Modifier.align(Alignment.TopCenter)) {
+                    MixerSpeechBubble(text = speechText)
                 }
             }
         }

@@ -7,12 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.ui.components.ToolType
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel() {
 
-    // KORREKTUR: Zugriff über die Property 'totalHearts' (ruft den Getter in SettingsManager auf)
     private val _totalHearts = mutableStateOf<Int>(settingsManager.totalHearts)
     val totalHearts: State<Int> = _totalHearts
 
@@ -31,6 +31,9 @@ class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel()
     private val _touchPosition = mutableStateOf<Offset?>(null)
     val touchPosition: State<Offset?> = _touchPosition
 
+    // Hilfsvariable, um laufende Timer abzubrechen, wenn neu geklickt wird
+    private var timerJob: Job? = null
+
     val level: Int
         get() = (_totalHearts.value / 1000) + 1
 
@@ -38,8 +41,17 @@ class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel()
         _activeTool.value = if (_activeTool.value == tool) ToolType.NONE else tool
     }
 
+    // NEU: Position setzen und nach 5 Sekunden löschen
     fun updateTouchPosition(offset: Offset?) {
         _touchPosition.value = offset
+
+        if (offset != null) {
+            timerJob?.cancel() // Alten Timer stoppen
+            timerJob = viewModelScope.launch {
+                delay(5000) // 5 Sekunden warten
+                _touchPosition.value = null
+            }
+        }
     }
 
     fun feedMixer() {
@@ -68,7 +80,6 @@ class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel()
 
     private fun addHearts(amount: Int) {
         _totalHearts.value += amount
-        // KORREKTUR: Zuweisung an die Property (ruft den Setter in SettingsManager auf)
         settingsManager.totalHearts = _totalHearts.value
     }
 
