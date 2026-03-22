@@ -3,38 +3,52 @@ package com.deinname.mixersreise
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.ViewModelProvider
-import com.deinname.mixersreise.data.SettingsManager
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import com.deinname.mixersreise.ui.screens.HomeScreen
-import com.deinname.mixersreise.ui.theme.MixersReiseTheme
+import com.deinname.mixersreise.ui.components.SettingsDialog
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
+import com.deinname.mixersreise.data.SettingsManager // Sicherstellen, dass der Import stimmt
 
 class MainActivity : ComponentActivity() {
+
+    // REPARATUR: Die Factory bekommt nur, was sie laut Fehlerbericht (Punkt 3) will.
+    private val viewModel: MixerViewModel by viewModels {
+        // Wir nutzen hier direkt eine Instanz des SettingsManagers
+        MixerViewModelFactory(SettingsManager(applicationContext))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Initialisierung des Managers
-        val settingsManager = SettingsManager(this)
-
-        // 2. Erstellung der Factory (Jetzt nur noch mit dem settingsManager)
-        val viewModelFactory = MixerViewModelFactory(settingsManager)
-
-        // 3. ViewModel über die Factory holen
-        val viewModel = ViewModelProvider(this, viewModelFactory)[MixerViewModel::class.java]
-
         setContent {
-            MixersReiseTheme {
-                // 4. Den HomeScreen aufrufen
-                HomeScreen(
-                    viewModel = viewModel,
-                    onOpenMap = {
-                        // Hier kommt später die Navigation zur Reise-Tabelle (V1) rein
-                    },
-                    onOpenSettings = {
-                        // Hier kommt die Navigation zum SettingsDialog rein
+            // State für den Settings-Dialog
+            var showSettingsDialog by remember { mutableStateOf(false) }
+
+            MaterialTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // Der HomeScreen
+                    HomeScreen(
+                        viewModel = viewModel,
+                        onOpenSettings = { showSettingsDialog = true }
+                    )
+
+                    // REPARATUR: SettingsDialog-Aufruf passend zu deiner Signatur (Punkt 6/7)
+                    if (showSettingsDialog) {
+                        SettingsDialog(
+                            onDismiss = { showSettingsDialog = false },
+                            viewModel = viewModel // Erwartet laut Fehler das viewModel
+                        )
                     }
-                )
+                }
             }
         }
     }
