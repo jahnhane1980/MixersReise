@@ -31,7 +31,6 @@ fun HomeScreen(viewModel: MixerViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Hintergrundbild - Füllt den kompletten Bereich
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer Hintergrund",
@@ -39,12 +38,9 @@ fun HomeScreen(viewModel: MixerViewModel) {
             contentScale = ContentScale.Crop
         )
 
-        // Der Mixer-Container
         Box(
             modifier = Modifier
-                // KORREKTUR: Padding auf 0 gesetzt für maximale Tiefe
                 .padding(bottom = 0.dp)
-                // Beibehalten der 350.dp für eine ordentliche Präsenz
                 .size(350.dp)
                 .pointerInput(activeTool) {
                     detectTapGestures(
@@ -63,14 +59,12 @@ fun HomeScreen(viewModel: MixerViewModel) {
                     )
                 }
         ) {
-            // Das Pferd (Mixer)
             SafeImage(
                 resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
                 contentDescription = "Mixer",
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Schmodder-Effekt
             if (droolAlpha > 0f) {
                 SafeImage(
                     resId = R.drawable.overlay_drool,
@@ -80,7 +74,6 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 )
             }
 
-            // Das Tool-Icon mit Fading-Effekt (4 Sek. Timer im ViewModel)
             AnimatedVisibility(
                 visible = activeTool != ToolType.NONE && touchPos != null,
                 enter = fadeIn(),
@@ -101,17 +94,18 @@ fun HomeScreen(viewModel: MixerViewModel) {
                             painter = painterResource(id = res),
                             contentDescription = "Tool Visual",
                             modifier = Modifier
-                                .size(80.dp)
+                                // KORREKTUR: Größe auf 120.dp erhöht (war 80.dp)
+                                .size(120.dp)
                                 .offset(
-                                    x = (touchPos.x / 2.5f).dp - 40.dp,
-                                    y = (touchPos.y / 2.5f).dp - 40.dp
+                                    // Offset angepasst, damit das größere Icon zentriert bleibt
+                                    x = (touchPos.x / 2.5f).dp - 60.dp,
+                                    y = (touchPos.y / 2.5f).dp - 60.dp
                                 )
                         )
                     }
                 }
             }
 
-            // Sprechblase
             if (speechText.isNotEmpty()) {
                 Box(modifier = Modifier.align(Alignment.TopCenter)) {
                     MixerSpeechBubble(text = speechText)

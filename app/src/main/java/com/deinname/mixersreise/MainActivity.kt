@@ -18,6 +18,7 @@ import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
+// KORREKTUR 1: Expliziter Import für ToolType
 import com.deinname.mixersreise.ui.components.ToolType
 
 class MainActivity : ComponentActivity() {
@@ -33,8 +34,10 @@ class MainActivity : ComponentActivity() {
                 var showSettingsDialog by remember { mutableStateOf(false) }
                 var isMapVisible by remember { mutableStateOf(false) }
 
-                val activeTool by viewModel.activeTool
-                val currentHearts by viewModel.totalHearts
+                // KORREKTUR 2: Die Imports für 'by' (getValue/setValue) sind in androidx.compose.runtime.* enthalten.
+                // Falls es dennoch hakt, liest man den Wert direkt über .value aus:
+                val activeTool = viewModel.activeTool.value
+                val currentHearts = viewModel.totalHearts.value
 
                 // Testdaten für die Weltkarte
                 val testDestinations = listOf("Berlin", "Paris", "New York", "Tokio")
@@ -51,7 +54,7 @@ class MainActivity : ComponentActivity() {
                         if (isMapVisible) {
                             MapScreen(
                                 points = testDestinations,
-                                hearts = currentHearts, // Übergabe der Herzen an den MapScreen
+                                hearts = currentHearts,
                                 apiKey = "DEIN_API_KEY",
                                 onClose = { isMapVisible = false }
                             )
@@ -63,7 +66,6 @@ class MainActivity : ComponentActivity() {
                     MixerToolBar(
                         activeTool = activeTool,
                         onToolSelected = { tool ->
-                            // Beim Auswählen eines Werkzeugs schließen wir die Karte automatisch
                             isMapVisible = false
                             viewModel.selectTool(tool)
                         }

@@ -16,7 +16,6 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     viewModel: MixerViewModel
 ) {
-    // Unser definiertes Blau (Deep Sea Blue)
     val customBlue = Color(0xFF1976D2)
     val pureWhite = Color.White
 
@@ -36,7 +35,7 @@ fun SettingsDialog(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // KORREKTUR: Kein Button-Look mehr. Reiner Text, dezent hervorgehoben.
+                // Level-Anzeige (Reiner Text, keine Button-Optik)
                 Text(
                     text = "Aktuelles Level: ${viewModel.level}",
                     style = MaterialTheme.typography.bodyLarge,
@@ -63,7 +62,7 @@ fun SettingsDialog(
                     fontWeight = FontWeight.Bold
                 )
 
-                // GPS Button: Blaues Design mit weißer Schrift
+                // GPS Button (Blau mit weißer Schrift)
                 Button(
                     onClick = { viewModel.detectLocationViaGps() },
                     colors = ButtonDefaults.buttonColors(
@@ -78,35 +77,45 @@ fun SettingsDialog(
                     Text("Standort über GPS ermitteln", fontWeight = FontWeight.Bold)
                 }
 
-                // Adressfelder
+                // Adresszeile 1: Straße
                 OutlinedTextField(
                     value = viewModel.userStreet.value,
-                    onValueChange = { viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value) },
+                    onValueChange = {
+                        viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
+                    },
                     label = { Text("Straße") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                // Adresszeile 2: Hausnummer & PLZ
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = viewModel.userHouseNumber.value,
-                        onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value) },
+                        onValueChange = {
+                            viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
+                        },
                         label = { Text("Nr.") },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     )
                     OutlinedTextField(
                         value = viewModel.userZipCode.value,
-                        onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value) },
+                        onValueChange = {
+                            viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value)
+                        },
                         label = { Text("PLZ") },
                         modifier = Modifier.weight(1.5f),
                         shape = RoundedCornerShape(12.dp)
                     )
                 }
 
+                // Adresszeile 3: Stadt
                 OutlinedTextField(
                     value = viewModel.userCity.value,
-                    onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it) },
+                    onValueChange = {
+                        viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it)
+                    },
                     label = { Text("Stadt") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -114,7 +123,7 @@ fun SettingsDialog(
             }
         },
         confirmButton = {
-            // Speichern Button: Blaues Design mit weißer Schrift
+            // Speichern Button (Blau mit weißer Schrift)
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
