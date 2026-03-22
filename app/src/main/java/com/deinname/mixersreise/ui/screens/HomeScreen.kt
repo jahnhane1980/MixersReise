@@ -3,6 +3,7 @@ package com.deinname.mixersreise.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -60,7 +62,6 @@ fun HomeScreen(
 
 @Composable
 fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
-    // DialogProperties für Fullscreen-Optik (optional)
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -70,10 +71,10 @@ fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.85f),
             shape = RoundedCornerShape(24.dp),
-            color = Color.Black // Basis für den Fall, dass das Bild lädt
+            color = Color.Black
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // 1. Das Hintergrundbild aus dem Ressourcen-Ordner
+                // Hintergrundbild
                 Image(
                     painter = painterResource(id = R.drawable.bg_world_map),
                     contentDescription = null,
@@ -81,13 +82,13 @@ fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
                     contentScale = ContentScale.Crop
                 )
 
-                // 2. Halbtransparente weiße Schicht für die Tabelle
+                // Tabelle auf halbtransparentem Weiß
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(20.dp)
                         .background(
-                            Color.White.copy(alpha = 0.7f),
+                            Color.White.copy(alpha = 0.75f),
                             shape = RoundedCornerShape(16.dp)
                         )
                         .padding(16.dp)
@@ -98,9 +99,9 @@ fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
                         color = Color.Black
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Tabellen-Header
+                    // Header
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -109,29 +110,58 @@ fun TravelTableDialog(onDismiss: () -> Unit, viewModel: MixerViewModel) {
                         Text("Ort", style = MaterialTheme.typography.titleMedium, color = Color.Black)
                     }
 
-                    Divider(color = Color.Gray, thickness = 1.dp)
+                    HorizontalDivider(color = Color.Gray.copy(alpha = 0.5f), thickness = 1.dp)
 
-                    // Beispiel-Daten (später binden wir hier das ViewModel an)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    // Scrollbare Liste
+                    LazyColumn(
+                        modifier = Modifier.weight(1f).fillMaxWidth()
                     ) {
-                        Text("1000", color = Color.DarkGray)
-                        Text("New York", color = Color.DarkGray)
+                        item {
+                            TravelRow(hearts = "1000", location = "New York")
+                            TravelRow(hearts = "550", location = "Berlin")
+                            TravelRow(hearts = "2100", location = "Tokio")
+                        }
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(16.dp))
 
+                    // Button mit DarkCyan und weißem Text
                     Button(
                         onClick = onDismiss,
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .fillMaxWidth(0.8f)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(50),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorResource(id = R.color.DarkCyan),
+                            contentColor = Color.White
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
                     ) {
-                        Text("Zurück zur Reise")
+                        Text(
+                            text = "Zurück zur Reise",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TravelRow(hearts: String, location: String) {
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = hearts, color = Color.DarkGray, style = MaterialTheme.typography.bodyLarge)
+            Text(text = location, color = Color.DarkGray, style = MaterialTheme.typography.bodyLarge)
+        }
+        HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f), thickness = 0.5.dp)
     }
 }
