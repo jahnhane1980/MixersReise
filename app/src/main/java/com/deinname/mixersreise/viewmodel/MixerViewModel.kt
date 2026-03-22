@@ -31,7 +31,6 @@ class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel()
     private val _touchPosition = mutableStateOf<Offset?>(null)
     val touchPosition: State<Offset?> = _touchPosition
 
-    // Hilfsvariable, um laufende Timer abzubrechen, wenn neu geklickt wird
     private var timerJob: Job? = null
 
     val level: Int
@@ -41,14 +40,13 @@ class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel()
         _activeTool.value = if (_activeTool.value == tool) ToolType.NONE else tool
     }
 
-    // NEU: Position setzen und nach 5 Sekunden löschen
     fun updateTouchPosition(offset: Offset?) {
         _touchPosition.value = offset
 
         if (offset != null) {
-            timerJob?.cancel() // Alten Timer stoppen
+            timerJob?.cancel()
             timerJob = viewModelScope.launch {
-                delay(5000) // 5 Sekunden warten
+                delay(4000)
                 _touchPosition.value = null
             }
         }

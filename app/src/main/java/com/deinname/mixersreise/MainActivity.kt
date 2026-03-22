@@ -17,6 +17,7 @@ import com.deinname.mixersreise.ui.screens.HomeScreen
 import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
+// KORREKTUR: Dieser Import hat gefehlt
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
 import com.deinname.mixersreise.ui.components.ToolType
 
@@ -25,13 +26,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsManager = SettingsManager(this)
+        // KORREKTUR: Hier wird die Factory jetzt durch den Import oben erkannt
         val viewModelFactory = MixerViewModelFactory(settingsManager)
         val viewModel = ViewModelProvider(this, viewModelFactory)[MixerViewModel::class.java]
 
         setContent {
             MixersReiseTheme {
                 var showSettingsDialog by remember { mutableStateOf(false) }
-                // NEU: Eigener State für die Karte, um ToolType.MAP zu ersetzen
                 var isMapVisible by remember { mutableStateOf(false) }
 
                 val activeTool by viewModel.activeTool
@@ -41,17 +42,14 @@ class MainActivity : ComponentActivity() {
                         hearts = viewModel.totalHearts.value,
                         level = viewModel.level,
                         onOpenSettings = { showSettingsDialog = true },
-                        // KORREKTUR: Nutzt jetzt den Boolean statt das ViewModel-Tool
                         onOpenMap = { isMapVisible = !isMapVisible }
                     )
 
                     Box(modifier = Modifier.weight(1f)) {
-                        // KORREKTUR: Prüfung erfolgt nun über den Boolean
                         if (isMapVisible) {
                             MapScreen(
                                 points = emptyList(),
                                 apiKey = "DEIN_API_KEY",
-                                // KORREKTUR: Schließt die Karte über den Boolean
                                 onClose = { isMapVisible = false }
                             )
                         } else {
@@ -62,7 +60,6 @@ class MainActivity : ComponentActivity() {
                     MixerToolBar(
                         activeTool = activeTool,
                         onToolSelected = { tool ->
-                            // Wenn ein Werkzeug gewählt wird, schließen wir die Karte
                             isMapVisible = false
                             viewModel.selectTool(tool)
                         }

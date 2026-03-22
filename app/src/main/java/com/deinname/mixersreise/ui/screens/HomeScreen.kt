@@ -1,5 +1,8 @@
 package com.deinname.mixersreise.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -42,10 +45,8 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 .pointerInput(activeTool) {
                     detectTapGestures(
                         onTap = { offset ->
-                            // Setzt die Position (Timer startet im ViewModel)
                             viewModel.updateTouchPosition(offset)
 
-                            // Führt die Aktion aus
                             when (activeTool) {
                                 ToolType.FOOD -> viewModel.feedMixer()
                                 ToolType.HAND -> viewModel.petMixer()
@@ -73,27 +74,34 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 )
             }
 
-            if (activeTool != ToolType.NONE && touchPos != null) {
-                val toolIconRes = when (activeTool) {
-                    ToolType.FOOD -> R.drawable.tool_food
-                    ToolType.HAND -> R.drawable.tool_hand
-                    ToolType.SPONGE -> R.drawable.tool_sponge
-                    ToolType.TALK -> R.drawable.tool_talk
-                    ToolType.COKE -> R.drawable.tool_coke
-                    else -> null
-                }
+            // NEU: Animiertes Ein- und Ausblenden des Tools
+            AnimatedVisibility(
+                visible = activeTool != ToolType.NONE && touchPos != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                if (touchPos != null) {
+                    val toolIconRes = when (activeTool) {
+                        ToolType.FOOD -> R.drawable.tool_food
+                        ToolType.HAND -> R.drawable.tool_hand
+                        ToolType.SPONGE -> R.drawable.tool_sponge
+                        ToolType.TALK -> R.drawable.tool_talk
+                        ToolType.COKE -> R.drawable.tool_coke
+                        else -> null
+                    }
 
-                toolIconRes?.let { res ->
-                    Image(
-                        painter = painterResource(id = res),
-                        contentDescription = "Tool Visual",
-                        modifier = Modifier
-                            .size(80.dp)
-                            .offset(
-                                x = (touchPos.x / 2.5f).dp - 40.dp,
-                                y = (touchPos.y / 2.5f).dp - 40.dp
-                            )
-                    )
+                    toolIconRes?.let { res ->
+                        Image(
+                            painter = painterResource(id = res),
+                            contentDescription = "Tool Visual",
+                            modifier = Modifier
+                                .size(80.dp)
+                                .offset(
+                                    x = (touchPos.x / 2.5f).dp - 40.dp,
+                                    y = (touchPos.y / 2.5f).dp - 40.dp
+                                )
+                        )
+                    }
                 }
             }
 
