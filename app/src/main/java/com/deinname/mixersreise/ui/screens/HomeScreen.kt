@@ -31,7 +31,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // Hintergrundbild
+        // Hintergrundbild - Füllt den kompletten Bereich
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer Hintergrund",
@@ -39,18 +39,18 @@ fun HomeScreen(viewModel: MixerViewModel) {
             contentScale = ContentScale.Crop
         )
 
-        // Interaktions-Bereich des Mixers
+        // Der Mixer-Container
         Box(
             modifier = Modifier
-                .padding(bottom = 100.dp)
-                .size(320.dp)
+                // KORREKTUR: Padding auf 0 gesetzt für maximale Tiefe
+                .padding(bottom = 0.dp)
+                // Beibehalten der 350.dp für eine ordentliche Präsenz
+                .size(350.dp)
                 .pointerInput(activeTool) {
                     detectTapGestures(
                         onTap = { offset ->
-                            // Position im ViewModel speichern (startet den 4-Sekunden-Timer)
                             viewModel.updateTouchPosition(offset)
 
-                            // Aktion ausführen
                             when (activeTool) {
                                 ToolType.FOOD -> viewModel.feedMixer()
                                 ToolType.HAND -> viewModel.petMixer()
@@ -80,7 +80,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 )
             }
 
-            // Das Tool-Icon mit Fading-Effekt
+            // Das Tool-Icon mit Fading-Effekt (4 Sek. Timer im ViewModel)
             AnimatedVisibility(
                 visible = activeTool != ToolType.NONE && touchPos != null,
                 enter = fadeIn(),
@@ -100,7 +100,6 @@ fun HomeScreen(viewModel: MixerViewModel) {
                         Image(
                             painter = painterResource(id = res),
                             contentDescription = "Tool Visual",
-                            // KORREKTUR: Hier stand das fehlerhafte Wort
                             modifier = Modifier
                                 .size(80.dp)
                                 .offset(
