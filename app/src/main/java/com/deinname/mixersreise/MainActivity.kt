@@ -31,26 +31,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             MixersReiseTheme {
                 var showSettingsDialog by remember { mutableStateOf(false) }
-                // Wir nutzen hier direkt den State aus dem ViewModel
+                // NEU: Eigener State für die Karte, um ToolType.MAP zu ersetzen
+                var isMapVisible by remember { mutableStateOf(false) }
+
                 val activeTool by viewModel.activeTool
 
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // Fehlerbehebung MixerTopBar: Nutzt jetzt die Parameter aus deinem Repository
                     MixerTopBar(
                         hearts = viewModel.totalHearts.value,
                         level = viewModel.level,
                         onOpenSettings = { showSettingsDialog = true },
-                        onOpenMap = { viewModel.selectTool(ToolType.MAP) }
+                        // KORREKTUR: Nutzt jetzt den Boolean statt das ViewModel-Tool
+                        onOpenMap = { isMapVisible = !isMapVisible }
                     )
 
-                    // Box-Layout korrekt innerhalb des Composable-Contexts
                     Box(modifier = Modifier.weight(1f)) {
-                        if (activeTool == ToolType.MAP) {
-                            // MapScreen benötigt laut Fehlermeldung spezifische Parameter
+                        // KORREKTUR: Prüfung erfolgt nun über den Boolean
+                        if (isMapVisible) {
                             MapScreen(
-                                points = emptyList(), // Hier müssten später die echten Daten rein
+                                points = emptyList(),
                                 apiKey = "DEIN_API_KEY",
-                                onClose = { viewModel.selectTool(ToolType.NONE) }
+                                // KORREKTUR: Schließt die Karte über den Boolean
+                                onClose = { isMapVisible = false }
                             )
                         } else {
                             HomeScreen(viewModel = viewModel)
@@ -59,12 +61,15 @@ class MainActivity : ComponentActivity() {
 
                     MixerToolBar(
                         activeTool = activeTool,
-                        onToolSelected = { viewModel.selectTool(it) }
+                        onToolSelected = { tool ->
+                            // Wenn ein Werkzeug gewählt wird, schließen wir die Karte
+                            isMapVisible = false
+                            viewModel.selectTool(tool)
+                        }
                     )
                 }
 
                 if (showSettingsDialog) {
-                    // Fehlerbehebung SettingsDialog: Erwartet 'viewModel' statt 'settingsManager'
                     SettingsDialog(
                         onDismiss = { showSettingsDialog = false },
                         viewModel = viewModel

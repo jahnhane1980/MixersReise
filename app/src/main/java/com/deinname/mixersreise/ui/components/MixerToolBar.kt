@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 
 enum class ToolType {
-    NONE, FOOD, HAND, SPONGE, TALK, MAP
+    NONE, FOOD, HAND, SPONGE, TALK, COKE
 }
 
 @Composable
@@ -56,10 +56,10 @@ fun MixerToolBar(
             onClick = { onToolSelected(ToolType.TALK) }
         )
         ToolButton(
-            iconRes = R.drawable.bg_world_map, // Beispielhaft für Map-Icon
-            description = "Karte",
-            isSelected = activeTool == ToolType.MAP,
-            onClick = { onToolSelected(ToolType.MAP) }
+            iconRes = R.drawable.tool_coke,
+            description = "Cola",
+            isSelected = activeTool == ToolType.COKE,
+            onClick = { onToolSelected(ToolType.COKE) }
         )
     }
 }

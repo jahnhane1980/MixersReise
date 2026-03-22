@@ -26,20 +26,21 @@ fun HomeScreen(viewModel: MixerViewModel) {
 
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.BottomCenter // Mixer nach unten orientieren
     ) {
-        // Hintergrund
+        // Hintergrund - Füllt den ganzen Screen
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer Hintergrund",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Funktioniert jetzt durch Update oben
+            contentScale = ContentScale.Crop
         )
 
-        // Interaktions-Bereich des Mixers
+        // Der Mixer-Container
         Box(
             modifier = Modifier
-                .size(300.dp)
+                .padding(bottom = 80.dp) // Abstand vom unteren Rand (Toolbar-Höhe)
+                .size(350.dp) // Etwas größer für bessere Präsenz
                 .pointerInput(activeTool) {
                     detectTapGestures(
                         onPress = { offset ->
@@ -82,7 +83,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
                     resId = R.drawable.overlay_drool,
                     contentDescription = "Schmodder",
                     modifier = Modifier.fillMaxSize(),
-                    alpha = droolAlpha // Funktioniert jetzt durch Update oben
+                    alpha = droolAlpha
                 )
             }
 
@@ -101,10 +102,10 @@ fun HomeScreen(viewModel: MixerViewModel) {
                         painter = painterResource(id = res),
                         contentDescription = "Tool Cursor",
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(64.dp) // Cursor etwas größer für bessere Sichtbarkeit
                             .offset(
-                                x = (touchPos.x / 2.5f).dp,
-                                y = (touchPos.y / 2.5f).dp
+                                x = (touchPos.x / 2.5f).dp - 32.dp, // Zentrierung des Icons am Finger
+                                y = (touchPos.y / 2.5f).dp - 32.dp
                             )
                     )
                 }
