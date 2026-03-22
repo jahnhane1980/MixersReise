@@ -31,6 +31,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
+        // Hintergrundbild
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer Hintergrund",
@@ -38,6 +39,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
             contentScale = ContentScale.Crop
         )
 
+        // Interaktions-Bereich des Mixers
         Box(
             modifier = Modifier
                 .padding(bottom = 100.dp)
@@ -45,8 +47,10 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 .pointerInput(activeTool) {
                     detectTapGestures(
                         onTap = { offset ->
+                            // Position im ViewModel speichern (startet den 4-Sekunden-Timer)
                             viewModel.updateTouchPosition(offset)
 
+                            // Aktion ausführen
                             when (activeTool) {
                                 ToolType.FOOD -> viewModel.feedMixer()
                                 ToolType.HAND -> viewModel.petMixer()
@@ -59,12 +63,14 @@ fun HomeScreen(viewModel: MixerViewModel) {
                     )
                 }
         ) {
+            // Das Pferd (Mixer)
             SafeImage(
                 resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
                 contentDescription = "Mixer",
                 modifier = Modifier.fillMaxSize()
             )
 
+            // Schmodder-Effekt
             if (droolAlpha > 0f) {
                 SafeImage(
                     resId = R.drawable.overlay_drool,
@@ -74,7 +80,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 )
             }
 
-            // NEU: Animiertes Ein- und Ausblenden des Tools
+            // Das Tool-Icon mit Fading-Effekt
             AnimatedVisibility(
                 visible = activeTool != ToolType.NONE && touchPos != null,
                 enter = fadeIn(),
@@ -94,6 +100,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
                         Image(
                             painter = painterResource(id = res),
                             contentDescription = "Tool Visual",
+                            // KORREKTUR: Hier stand das fehlerhafte Wort
                             modifier = Modifier
                                 .size(80.dp)
                                 .offset(
@@ -105,6 +112,7 @@ fun HomeScreen(viewModel: MixerViewModel) {
                 }
             }
 
+            // Sprechblase
             if (speechText.isNotEmpty()) {
                 Box(modifier = Modifier.align(Alignment.TopCenter)) {
                     MixerSpeechBubble(text = speechText)
