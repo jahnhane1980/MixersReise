@@ -6,44 +6,50 @@ import android.content.SharedPreferences
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
 
-    // Nutzerdaten
-    var userName: String
-        get() = prefs.getString("user_name", "Entdecker") ?: "Entdecker"
-        set(value) = prefs.edit().putString("user_name", value).apply()
+    companion object {
+        private const val KEY_TOTAL_HEARTS = "total_hearts"
+        private const val KEY_USER_NAME = "user_name"
+        private const val KEY_STREET = "address_street"
+        private const val KEY_HOUSE_NUMBER = "address_house_number"
+        private const val KEY_ZIP_CODE = "address_zip_code"
+        private const val KEY_CITY = "address_city"
+        private const val KEY_LATITUDE = "address_latitude"
+        private const val KEY_LONGITUDE = "address_longitude"
 
-    // Heimat-Koordinaten für die "Ananas"-Reiselogik
-    var homeLatitude: Double
-        get() = prefs.getFloat("home_lat", 0.0f).toDouble()
-        set(value) = prefs.edit().putFloat("home_lat", value.toFloat()).apply()
+        private const val DEFAULT_NAME = "Reisender"
+        private const val EMPTY_STRING = ""
+        private const val DEFAULT_COORD = 0f
+    }
 
-    var homeLongitude: Double
-        get() = prefs.getFloat("home_lng", 0.0f).toDouble()
-        set(value) = prefs.edit().putFloat("home_lng", value.toFloat()).apply()
-
-    // Fortschritt
     var totalHearts: Int
-        get() = prefs.getInt("total_hearts", 0)
-        set(value) = prefs.edit().putInt("total_hearts", value).apply()
+        get() = prefs.getInt(KEY_TOTAL_HEARTS, 0)
+        set(value) = prefs.edit().putInt(KEY_TOTAL_HEARTS, value).apply()
 
-    // Technische Keys (Google Maps / API)
-    var googleApiKey: String
-        get() = prefs.getString("google_api_key", "") ?: ""
-        set(value) = prefs.edit().putString("google_api_key", value).apply()
+    var userName: String
+        get() = prefs.getString(KEY_USER_NAME, DEFAULT_NAME) ?: DEFAULT_NAME
+        set(value) = prefs.edit().putString(KEY_USER_NAME, value).apply()
 
-    var googleMapId: String
-        get() = prefs.getString("google_map_id", "") ?: ""
-        set(value) = prefs.edit().putString("google_map_id", value).apply()
+    var street: String
+        get() = prefs.getString(KEY_STREET, EMPTY_STRING) ?: EMPTY_STRING
+        set(value) = prefs.edit().putString(KEY_STREET, value).apply()
 
-    // Status-Variablen für den Worker und Tests
-    var isTestModeActive: Boolean
-        get() = prefs.getBoolean("test_mode", false)
-        set(value) = prefs.edit().putBoolean("test_mode", value).apply()
+    var houseNumber: String
+        get() = prefs.getString(KEY_HOUSE_NUMBER, EMPTY_STRING) ?: EMPTY_STRING
+        set(value) = prefs.edit().putString(KEY_HOUSE_NUMBER, value).apply()
 
-    var notificationSentTime: Long
-        get() = prefs.getLong("notification_sent_time", 0L)
-        set(value) = prefs.edit().putLong("notification_sent_time", value).apply()
+    var zipCode: String
+        get() = prefs.getString(KEY_ZIP_CODE, EMPTY_STRING) ?: EMPTY_STRING
+        set(value) = prefs.edit().putString(KEY_ZIP_CODE, value).apply()
 
-    var lastHungerUpdate: Long
-        get() = prefs.getLong("last_hunger_update", System.currentTimeMillis())
-        set(value) = prefs.edit().putLong("last_hunger_update", value).apply()
+    var city: String
+        get() = prefs.getString(KEY_CITY, EMPTY_STRING) ?: EMPTY_STRING
+        set(value) = prefs.edit().putString(KEY_CITY, value).apply()
+
+    var latitude: Float
+        get() = prefs.getFloat(KEY_LATITUDE, DEFAULT_COORD)
+        set(value) = prefs.edit().putFloat(KEY_LATITUDE, value).apply()
+
+    var longitude: Float
+        get() = prefs.getFloat(KEY_LONGITUDE, DEFAULT_COORD)
+        set(value) = prefs.edit().putFloat(KEY_LONGITUDE, value).apply()
 }
