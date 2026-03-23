@@ -18,16 +18,18 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // Das Bild liegt in einer Box ganz unten
+    // Die Box sorgt dafür, dass das Hintergrundbild ganz unten liegt
     Box(modifier = Modifier.fillMaxSize()) {
+
+        // 1. Hintergrundbild (Zuerst zeichnen)
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = null,
             modifier = Modifier.fillMaxSize()
         )
 
+        // 2. Scaffold transparent machen, damit das Bild sichtbar bleibt
         Scaffold(
-            // WICHTIG: Scaffold muss transparent sein, um das Bild zu sehen
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
@@ -53,11 +55,12 @@ fun HomeScreen(
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
-                    speechText = viewModel.speechText.value,
+                    // FIX: Sicherstellen, dass speechText nie null an die Komponente geht
+                    speechText = viewModel.speechText.value ?: "",
                     showHearts = false
                 )
 
-                // FIX: StatsHeader hier entfernt, da MixerTopBar die Werte anzeigt.
+                // StatsHeader hier entfernt, da MixerTopBar das Level bereits anzeigt.
 
                 if (showSettings) {
                     SettingsDialog(
