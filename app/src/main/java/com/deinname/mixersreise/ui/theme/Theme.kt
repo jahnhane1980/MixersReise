@@ -23,7 +23,6 @@ private val CosyColorScheme = lightColorScheme(
 @Composable
 fun MixersReiseTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Wir deaktivieren Dynamic Color (Android 12+), damit unsere Mixer-Farben Priorität haben!
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -32,6 +31,7 @@ fun MixersReiseTheme(
 
     if (!view.isInEditMode) {
         val window = (view.context as Activity).window
+        // Setzt die System-Leiste oben auf unser Holz-Braun
         window.statusBarColor = colorScheme.primary.toArgb()
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }
