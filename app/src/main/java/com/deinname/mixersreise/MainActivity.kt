@@ -20,21 +20,22 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val database = AppDatabase.getDatabase(this)
+        // R1: Physical Truth - getDatabase braucht context UND scope
+        val database = AppDatabase.getDatabase(this, lifecycleScope)
         val settingsManager = SettingsManager(this)
 
-        // R5: Explizite Instanziierung der Factory zur Fehlervermeidung
-        val factory = MixerViewModelFactory(
-            database.travelDao(),
-            settingsManager,
-            lifecycleScope
-        )
-
-        val viewModel: MixerViewModel by viewModels { factory }
+        // R2: Synchronisierte Übergabe an die Factory
+        val viewModel: MixerViewModel by viewModels {
+            MixerViewModelFactory(
+                travelDao = database.travelDao(),
+                settingsManager = settingsManager,
+                scope = lifecycleScope
+            )
+        }
 
         setContent {
             MixersReiseTheme {
-                // R5: Surface auf Transparent, damit Hintergrundbild im HomeScreen sichtbar ist
+                // R5: Transparenz-Fix für den HomeScreen-Hintergrund
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
@@ -42,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            // Map Navigation
+                            // Navigation zur Map (später)
                         }
                     )
                 }

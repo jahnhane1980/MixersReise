@@ -1,45 +1,22 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-class MixerViewModel(
+class MixerViewModelFactory(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
     private val scope: CoroutineScope
-) : ViewModel() {
+) : ViewModelProvider.Factory {
 
-    var level = 1
-    var totalHearts = mutableStateOf(0)
-    var activeTool = mutableStateOf(ToolType.HAND)
-
-    var isSleeping = mutableStateOf(false)
-    var droolAlpha = mutableStateOf(0f)
-    var speechText = mutableStateOf("Hallo! Ich bin Mixer.")
-
-    val destinations = listOf("Berlin", "Paris", "Tokio")
-
-    init {
-        scope.launch {
-            while(true) {
-                delay(10000)
-                if (isSleeping.value) {
-                    droolAlpha.value = (droolAlpha.value + 0.1f).coerceAtMost(1.0f)
-                }
-            }
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MixerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MixerViewModel(travelDao, settingsManager, scope) as T
         }
-    }
-
-    fun selectTool(tool: ToolType) {
-        activeTool.value = tool
-        if (tool == ToolType.FOOD) {
-            totalHearts.value += 5
-            speechText.value = "Mjam!"
-        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
