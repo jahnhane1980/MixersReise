@@ -18,25 +18,23 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Die Box ist der absolute Anker. Alles darin wird von oben nach unten gestapelt.
+    // R5: Root-Container stellt sicher, dass das Hintergrundbild ganz unten liegt
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // EBENE 1: Hintergrundbild (Muss ganz oben im Code stehen, um ganz unten im UI zu sein)
+        // Hintergrundbild
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "",
+            contentDescription = null,
             modifier = Modifier.fillMaxSize()
         )
 
-        // EBENE 2: UI-Gerüst
+        // Scaffold liegt darüber und ist transparent
         Scaffold(
-            // WICHTIG: Wenn das nicht transparent ist, siehst du Ebene 1 nicht!
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
                     hearts = viewModel.totalHearts.value,
-                    onOpenMap = onOpenMap,
+                    onOpenMap = onOpenMap, // Navigation zur Map
                     onOpenSettings = { showSettings = true }
                 )
             },
@@ -47,12 +45,13 @@ fun HomeScreen(
                 )
             }
         ) { innerPadding ->
-            // EBENE 3: Mixer & Interaktion
+            // Der Content-Bereich des Scaffolds
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                // Hauptanzeige des Mixers
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
@@ -60,6 +59,7 @@ fun HomeScreen(
                     showHearts = false
                 )
 
+                // Dialog-Overlay (wird nur angezeigt, wenn showSettings true ist)
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },

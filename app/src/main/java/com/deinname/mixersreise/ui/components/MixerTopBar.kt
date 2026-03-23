@@ -38,9 +38,17 @@ fun MixerTopBar(
             }
         },
         actions = {
-            IconButton(onClick = onOpenMap) { Text("📍", fontSize = 24.sp) }
-            IconButton(onClick = onOpenSettings) { Text("⚙️", fontSize = 24.sp) }
+            // FIX: Explizite IconButton-Logik für Map
+            IconButton(onClick = { onOpenMap() }) {
+                Text("📍", fontSize = 24.sp)
+            }
+            IconButton(onClick = { onOpenSettings() }) {
+                Text("⚙️", fontSize = 24.sp)
+            }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+            actionIconContentColor = Color.Unspecified // R4: Icons behalten Originalfarbe
+        )
     )
 }
