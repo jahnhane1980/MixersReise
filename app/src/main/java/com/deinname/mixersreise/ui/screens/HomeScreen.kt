@@ -19,15 +19,16 @@ fun HomeScreen(
     var showSettings by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // HINTERGRUND: contentDescription ist jetzt "" (statt null)
+        // 1. Hintergrundbild (Ganz unten)
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "",
             modifier = Modifier.fillMaxSize()
         )
 
+        // 2. UI Layer (Transparenter Scaffold)
         Scaffold(
-            containerColor = Color.Transparent, // Damit das Bild sichtbar bleibt
+            containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
@@ -48,7 +49,6 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Das MixerDisplay enthält keine doppelten Level-Anzeigen mehr
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,

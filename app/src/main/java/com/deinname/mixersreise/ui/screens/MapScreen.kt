@@ -19,7 +19,7 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 @Composable
 fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // WELTKARTE: contentDescription ist jetzt ""
+        // Hintergrund Weltkarte
         SafeImage(
             resId = R.drawable.bg_world_map,
             contentDescription = "",
@@ -43,7 +43,6 @@ fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
                     .weight(1f)
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
-                // Warmes Beige mit leichter Transparenz für die Karte
                 colors = CardDefaults.cardColors(containerColor = LemonChiffon.copy(alpha = 0.85f)),
                 shape = RoundedCornerShape(24.dp)
             ) {
