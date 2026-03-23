@@ -1,7 +1,7 @@
 package com.deinname.mixersreise.viewmodel
 
 // KORREKTUR: Import des Enums aus dem Komponenten-Package
-import com.deinname.mixersreise.ui.components.ToolType
+import com.deinname.mixersreise.viewmodel.ToolType
 
 fun handleMixerAction(
     activeTool: ToolType,

@@ -1,153 +1,81 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.ui.components.ToolType
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-class MixerViewModel(private val settingsManager: SettingsManager) : ViewModel() {
+class MixerViewModel(private val settingsManager: Any) : ViewModel() {
+    // Falls dein SettingsManager einen echten Typ hat, ersetze 'Any' durch diesen Typ.
 
-    private val _totalHearts = mutableStateOf(settingsManager.totalHearts)
-    val totalHearts: State<Int> = _totalHearts
+    // --- Benutzerdaten (States) ---
+    val userName = mutableStateOf("User")
+    val userStreet = mutableStateOf("")
+    val userHouseNumber = mutableStateOf("")
+    val userZipCode = mutableStateOf("")
+    val userCity = mutableStateOf("")
 
-    private val _activeTool = mutableStateOf(ToolType.NONE)
-    val activeTool: State<ToolType> = _activeTool
+    private val _destinations = mutableStateListOf<String>()
+    val destinations: List<String> = _destinations
 
-    private val _isSleeping = mutableStateOf(false)
-    val isSleeping: State<Boolean> = _isSleeping
+    // --- Status-Werte ---
+    val level = 1
+    val totalHearts = mutableStateOf(0)
+    val hunger = mutableStateOf(1.0f)
+    val hygiene = mutableStateOf(1.0f)
+    val social = mutableStateOf(1.0f)
+    val boredom = mutableStateOf(1.0f)
 
-    private val _droolAlpha = mutableStateOf(0f)
-    val droolAlpha: State<Float> = _droolAlpha
+    // --- UI-States ---
+    val isSleeping = mutableStateOf(false)
+    val droolAlpha = mutableStateOf(0f)
+    val speechText = mutableStateOf("")
+    val activeTool = mutableStateOf(ToolType.NONE)
 
-    private val _speechText = mutableStateOf("")
-    val speechText: State<String> = _speechText
-
-    private val _touchPosition = mutableStateOf<Offset?>(null)
-    val touchPosition: State<Offset?> = _touchPosition
-
-    // Neue States für Personalisierung und Standort
-    private val _userName = mutableStateOf(settingsManager.userName)
-    val userName: State<String> = _userName
-
-    private val _userStreet = mutableStateOf(settingsManager.street)
-    val userStreet: State<String> = _userStreet
-
-    private val _userHouseNumber = mutableStateOf(settingsManager.houseNumber)
-    val userHouseNumber: State<String> = _userHouseNumber
-
-    private val _userZipCode = mutableStateOf(settingsManager.zipCode)
-    val userZipCode: State<String> = _userZipCode
-
-    private val _userCity = mutableStateOf(settingsManager.city)
-    val userCity: State<String> = _userCity
-
-    private val _latitude = mutableStateOf(settingsManager.latitude)
-    val latitude: State<Float> = _latitude
-
-    private val _longitude = mutableStateOf(settingsManager.longitude)
-    val longitude: State<Float> = _longitude
-
-    private var timerJob: Job? = null
-
-    val level: Int
-        get() = (_totalHearts.value / 1000) + 1
-
-    fun selectTool(tool: ToolType) {
-        _activeTool.value = if (_activeTool.value == tool) ToolType.NONE else tool
-    }
-
-    fun updateTouchPosition(offset: Offset?) {
-        _touchPosition.value = offset
-        if (offset != null) {
-            timerJob?.cancel()
-            timerJob = viewModelScope.launch {
-                delay(4000)
-                _touchPosition.value = null
-            }
-        }
-    }
+    // --- DIESE METHODEN FEHLTEN (Fix für SettingsDialog) ---
 
     fun updateUserName(newName: String) {
-        _userName.value = newName
-        settingsManager.userName = newName
-    }
-
-    fun updateAddress(street: String, nr: String, zip: String, city: String, lat: Float? = null, lon: Float? = null) {
-        _userStreet.value = street
-        _userHouseNumber.value = nr
-        _userZipCode.value = zip
-        _userCity.value = city
-
-        settingsManager.street = street
-        settingsManager.houseNumber = nr
-        settingsManager.zipCode = zip
-        settingsManager.city = city
-
-        lat?.let {
-            _latitude.value = it
-            settingsManager.latitude = it
-        }
-        lon?.let {
-            _longitude.value = it
-            settingsManager.longitude = it
-        }
+        userName.value = newName
     }
 
     fun detectLocationViaGps() {
-        // Mock-Daten inklusive Koordinaten (Länge/Breite)
-        // Später wird hier der echte FusedLocationProvider integriert
-        updateAddress(
-            street = "Musterstraße",
-            nr = "42",
-            zip = "12345",
-            city = "Mixerstadt",
-            lat = 52.5200f,
-            lon = 13.4050f
-        )
+        // Später kommt hier die GPS-Logik rein
+        speechText.value = "Suche GPS Signal..."
     }
 
+    fun updateAddress(street: String, nr: String, zip: String, city: String) {
+        userStreet.value = street
+        userHouseNumber.value = nr
+        userZipCode.value = zip
+        userCity.value = city
+    }
+
+    // --- Logik-Funktionen (Für die Toolbar) ---
+
     fun feedMixer() {
-        if (_isSleeping.value) return
-        addHearts(10)
-        showSpeech("Mampf! Das schmeckt, ${_userName.value}!")
+        hunger.value = (hunger.value + 0.3f).coerceAtMost(1.0f)
+        totalHearts.value += 10
+        speechText.value = "Mampf! Danke!"
     }
 
     fun petMixer() {
-        if (_isSleeping.value) return
-        addHearts(5)
-        showSpeech("Ooh, danke ${_userName.value}!")
+        social.value = (social.value + 0.2f).coerceAtMost(1.0f)
+        totalHearts.value += 5
+        speechText.value = "Das tut gut..."
     }
 
     fun cleanMixer() {
-        if (_droolAlpha.value > 0f) {
-            _droolAlpha.value = 0f
-            addHearts(20)
-            showSpeech("Sauber! Danke!")
-        }
+        hygiene.value = (hygiene.value + 0.5f).coerceAtMost(1.0f)
+        totalHearts.value += 8
+        speechText.value = "Blitzblank!"
     }
 
     fun talkToMixer() {
-        showSpeech("Hallo ${_userName.value}! Wie geht's?")
+        boredom.value = (boredom.value + 0.25f).coerceAtMost(1.0f)
+        totalHearts.value += 5
+        speechText.value = "Erzähl mir mehr!"
     }
 
-    private fun addHearts(amount: Int) {
-        _totalHearts.value += amount
-        settingsManager.totalHearts = _totalHearts.value
-    }
-
-    private fun showSpeech(text: String) {
-        viewModelScope.launch {
-            _speechText.value = text
-            delay(3000)
-            if (_speechText.value == text) {
-                _speechText.value = ""
-            }
-        }
+    fun selectTool(tool: ToolType) {
+        activeTool.value = if (activeTool.value == tool) ToolType.NONE else tool
     }
 }

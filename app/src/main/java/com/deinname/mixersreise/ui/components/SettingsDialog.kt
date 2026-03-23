@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.deinname.mixersreise.ui.theme.*
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
@@ -16,15 +17,15 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     viewModel: MixerViewModel
 ) {
-    val customBlue = Color(0xFF1976D2)
-    val pureWhite = Color.White
-
     AlertDialog(
         onDismissRequest = onDismiss,
+        // Hintergrund des Dialogs in warmem Beige
+        containerColor = LemonChiffon,
         title = {
             Text(
                 text = "Einstellungen",
                 style = MaterialTheme.typography.headlineSmall,
+                color = DarkWood,
                 fontWeight = FontWeight.Bold
             )
         },
@@ -35,14 +36,11 @@ fun SettingsDialog(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Level-Anzeige (Reiner Text, keine Button-Optik)
+                // Info-Text
                 Text(
-                    text = "Aktuelles Level: ${viewModel.level}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = customBlue,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    text = "Hier kannst du deine Daten und Mixers Zuhause verwalten.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkWood.copy(alpha = 0.8f)
                 )
 
                 // Namens-Eingabe
@@ -51,30 +49,37 @@ fun SettingsDialog(
                     onValueChange = { viewModel.updateUserName(it) },
                     label = { Text("Dein Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = WarmWood,
+                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f),
+                        focusedLabelColor = WarmWood,
+                        cursorColor = WarmWood
+                    )
                 )
 
-                Divider(modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = DarkWood.copy(alpha = 0.1f))
 
                 Text(
-                    text = "Mixers Zuhause (Standort)",
+                    text = "Standort (Zuhause)",
                     style = MaterialTheme.typography.labelLarge,
+                    color = DarkWood,
                     fontWeight = FontWeight.Bold
                 )
 
-                // GPS Button (Blau mit weißer Schrift)
+                // GPS Button (CosyBlue passend zum Halstuch)
                 Button(
                     onClick = { viewModel.detectLocationViaGps() },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = customBlue,
-                        contentColor = pureWhite
+                        containerColor = CosyBlue,
+                        contentColor = DarkWood // Dunkler Text auf hellem Blau für bessere Lesbarkeit
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                 ) {
-                    Text("Standort über GPS ermitteln", fontWeight = FontWeight.Bold)
+                    Text("📍 Aktuellen Standort speichern", fontWeight = FontWeight.Bold)
                 }
 
                 // Adresszeile 1: Straße
@@ -85,7 +90,11 @@ fun SettingsDialog(
                     },
                     label = { Text("Straße") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = WarmWood,
+                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
+                    )
                 )
 
                 // Adresszeile 2: Hausnummer & PLZ
@@ -97,7 +106,11 @@ fun SettingsDialog(
                         },
                         label = { Text("Nr.") },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = WarmWood,
+                            unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
+                        )
                     )
                     OutlinedTextField(
                         value = viewModel.userZipCode.value,
@@ -106,7 +119,11 @@ fun SettingsDialog(
                         },
                         label = { Text("PLZ") },
                         modifier = Modifier.weight(1.5f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = WarmWood,
+                            unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
+                        )
                     )
                 }
 
@@ -118,21 +135,25 @@ fun SettingsDialog(
                     },
                     label = { Text("Stadt") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = WarmWood,
+                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
+                    )
                 )
             }
         },
         confirmButton = {
-            // Speichern Button (Blau mit weißer Schrift)
+            // Speichern Button (WarmWood mit LemonChiffon Schrift)
             Button(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = customBlue,
-                    contentColor = pureWhite
+                    containerColor = WarmWood,
+                    contentColor = LemonChiffon
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Speichern", fontWeight = FontWeight.Bold)
+                Text("Fertig", fontWeight = FontWeight.Bold)
             }
         }
     )

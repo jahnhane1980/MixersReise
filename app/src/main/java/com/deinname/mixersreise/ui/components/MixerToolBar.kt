@@ -14,25 +14,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
-
-/**
- * Definition der verfügbaren Werkzeuge.
- */
-enum class ToolType {
-    NONE, FOOD, HAND, SPONGE, TALK, COKE
-}
+import com.deinname.mixersreise.ui.theme.CosyBlue
+import com.deinname.mixersreise.ui.theme.DarkWood
+import com.deinname.mixersreise.ui.theme.LemonChiffon
+import com.deinname.mixersreise.viewmodel.ToolType
 
 @Composable
 fun MixerToolBar(
     activeTool: ToolType,
     onToolSelected: (ToolType) -> Unit
 ) {
-    // Dunkler Hintergrund für die Toolbar
-    val barBackground = Color(0xFF1A1A1A)
-    // Blau für den Kreis hinter dem aktiven Icon
-    val activeCircleColor = Color(0xFF1976D2)
-    // Dezenter Kreis für inaktive Icons
-    val inactiveCircleColor = Color.White.copy(alpha = 0.15f)
+    // Wir nutzen jetzt unsere neuen Farben aus der Color.kt
+    val barBackground = DarkWood
+    val activeCircleColor = CosyBlue
+    val inactiveCircleColor = LemonChiffon.copy(alpha = 0.15f)
 
     Surface(
         modifier = Modifier
@@ -41,7 +36,9 @@ fun MixerToolBar(
         color = barBackground
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -77,8 +74,7 @@ fun ToolButton(
             painter = painterResource(id = resId),
             contentDescription = null,
             modifier = Modifier.size(36.dp),
-            // KORREKTUR: Tint auf Unspecified setzen, damit die Icons ihre
-            // Originalfarben behalten und nicht weiß übermalt werden.
+            // WICHTIG: Kein Tint, damit die farbigen Icons erhalten bleiben
             tint = Color.Unspecified
         )
     }
