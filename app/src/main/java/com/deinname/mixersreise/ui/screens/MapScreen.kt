@@ -19,10 +19,10 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 @Composable
 fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Hintergrundbild der Weltkarte
+        // FIX: contentDescription darf nicht null sein
         SafeImage(
             resId = R.drawable.bg_world_map,
-            contentDescription = null,
+            contentDescription = "",
             modifier = Modifier.fillMaxSize()
         )
 

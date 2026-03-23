@@ -18,17 +18,16 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // Wir legen das Hintergrundbild GANZ UNTEN in eine Box,
-    // damit es hinter dem Scaffold liegt
     Box(modifier = Modifier.fillMaxSize()) {
+        // FIX: contentDescription darf nicht null sein
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = null,
+            contentDescription = "",
             modifier = Modifier.fillMaxSize()
         )
 
         Scaffold(
-            containerColor = Color.Transparent, // WICHTIG: Damit man das Bild sieht!
+            containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
