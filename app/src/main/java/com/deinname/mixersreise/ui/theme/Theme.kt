@@ -31,7 +31,7 @@ fun MixersReiseTheme(
 
     if (!view.isInEditMode) {
         val window = (view.context as Activity).window
-        // Setzt die System-Leiste oben auf unser Holz-Braun
+        // R5: Die Statusleiste wird farblich an die App angepasst
         window.statusBarColor = colorScheme.primary.toArgb()
         WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
     }

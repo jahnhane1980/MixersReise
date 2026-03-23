@@ -18,16 +18,16 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
+    // R5: Root-Box stellt sicher, dass das Bild ganz unten liegt
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // FIX: contentDescription darf nicht null sein. Wir geben einen leeren String oder Text an.
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Hintergrund Schlafzimmer",
+            contentDescription = null,
             modifier = Modifier.fillMaxSize()
         )
 
         Scaffold(
+            // WICHTIG: Erlaubt den Durchblick auf das Bild in der Box
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
@@ -52,7 +52,7 @@ fun HomeScreen(
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
-                    speechText = viewModel.speechText.value ?: "",
+                    speechText = viewModel.speechText.value,
                     showHearts = false
                 )
 

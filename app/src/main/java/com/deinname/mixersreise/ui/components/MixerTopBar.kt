@@ -25,11 +25,12 @@ fun MixerTopBar(
 ) {
     TopAppBar(
         title = {
+            // R4-CHECK: Custom Styling statt Standard-Text
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(WarmWood.copy(alpha = 0.8f)) // Holz-Optik für die Stats
+                    .background(WarmWood.copy(alpha = 0.8f))
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text("Lv. $level", color = LemonChiffon, fontSize = 16.sp, fontWeight = FontWeight.Bold)
@@ -38,11 +39,10 @@ fun MixerTopBar(
             }
         },
         actions = {
-            // Icons ohne Tint, um ihre Originalfarben (Gelb/Blau) zu nutzen
             IconButton(onClick = onOpenMap) { Text("📍", fontSize = 24.sp) }
             IconButton(onClick = onOpenSettings) { Text("⚙️", fontSize = 24.sp) }
         },
-        // TopBar selbst ist jetzt komplett durchsichtig
+        // FIX: Hintergrund der Bar selbst auf Transparent
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
     )
 }
