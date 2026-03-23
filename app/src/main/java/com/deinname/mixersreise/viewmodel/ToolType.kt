@@ -1,6 +1,10 @@
 package com.deinname.mixersreise.viewmodel
 
-// Enum Definition
 enum class ToolType {
-    NONE, FOOD, HAND, SPONGE, TALK, COKE
+    HAND,
+    FOOD,
+    CLEAN,
+    TALK,
+    SPONGE, // Hinzugefügt für MixerToolBar Fix
+    COKE    // Hinzugefügt für MixerToolBar Fix
 }

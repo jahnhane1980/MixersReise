@@ -8,15 +8,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-enum class ToolType { HAND, FOOD, CLEAN, TALK }
-
 class MixerViewModel(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
     private val scope: CoroutineScope
 ) : ViewModel() {
 
-    // Stats & Tools
+    // Stats
     var level = 1
     var totalHearts = mutableStateOf(0)
     var activeTool = mutableStateOf(ToolType.HAND)
@@ -26,7 +24,7 @@ class MixerViewModel(
     var droolAlpha = mutableStateOf(0f)
     var speechText = mutableStateOf("Hallo! Ich bin Mixer.")
 
-    // User Settings (Neu hinzugefügt für SettingsDialog Fix)
+    // User Settings
     var userName = mutableStateOf("Mixer-Freund")
     var userStreet = mutableStateOf("")
     var userHouseNumber = mutableStateOf("")
@@ -46,13 +44,12 @@ class MixerViewModel(
         }
     }
 
-    // Logik-Funktionen
     fun selectTool(tool: ToolType) {
         activeTool.value = tool
         when(tool) {
-            ToolType.FOOD -> feedMixer()
+            ToolType.FOOD, ToolType.COKE -> feedMixer()
             ToolType.HAND -> petMixer()
-            ToolType.CLEAN -> cleanMixer()
+            ToolType.CLEAN, ToolType.SPONGE -> cleanMixer()
             ToolType.TALK -> talkToMixer()
         }
     }
@@ -62,7 +59,6 @@ class MixerViewModel(
     fun cleanMixer() { droolAlpha.value = 0f; speechText.value = "Glänzend!" }
     fun talkToMixer() { speechText.value = "Echt jetzt?" }
 
-    // Settings Updates
     fun updateUserName(newName: String) { userName.value = newName }
     fun updateAddress(street: String, houseNr: String, zip: String, city: String) {
         userStreet.value = street
