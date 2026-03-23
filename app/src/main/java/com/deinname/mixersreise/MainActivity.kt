@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(this)
         val settingsManager = SettingsManager(this)
 
-        // R2: Synchronisierte Signatur mit 3 Parametern
+        // R2: Übergabe aller 3 Parameter an die Factory
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(
                 database.travelDao(),
@@ -34,14 +34,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MixersReiseTheme {
-                // R5: Surface auf Transparent für Hintergrund-Sichtbarkeit
+                // R5: Surface transparent, damit das Bild im HomeScreen durchscheint
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
                 ) {
                     HomeScreen(
                         viewModel = viewModel,
-                        onOpenMap = { /* Navigation folgt */ }
+                        onOpenMap = {
+                            // Navigation zur Map
+                        }
                     )
                 }
             }
