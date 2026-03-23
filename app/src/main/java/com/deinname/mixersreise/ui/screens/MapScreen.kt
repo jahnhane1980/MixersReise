@@ -1,6 +1,5 @@
 package com.deinname.mixersreise.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,45 +11,66 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.deinname.mixersreise.R
+import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.theme.*
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
 fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize().background(LemonChiffon).padding(16.dp)
-    ) {
-        Text("Deine Reiseziele", style = MaterialTheme.typography.headlineMedium, color = DarkWood, fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Hintergrundbild der Weltkarte
+        SafeImage(
+            resId = R.drawable.bg_world_map,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize()
+        )
 
-        Card(
-            modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.6f)),
-            shape = RoundedCornerShape(24.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            val currentDestinations = viewModel.destinations
-            if (currentDestinations.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Noch keine Ziele entdeckt", color = DarkWood.copy(alpha = 0.5f))
-                }
-            } else {
-                LazyColumn(modifier = Modifier.padding(8.dp)) {
-                    items(currentDestinations) { city: String ->
-                        ListItem(
-                            headlineContent = { Text(text = city, color = DarkWood) },
-                            leadingContent = { Text(text = "📍") }
-                        )
+            Text(
+                text = "Deine Reiseziele",
+                style = MaterialTheme.typography.headlineMedium,
+                color = DarkWood,
+                fontWeight = FontWeight.Bold
+            )
+
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = LemonChiffon.copy(alpha = 0.85f)),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                val currentDestinations = viewModel.destinations
+                if (currentDestinations.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Noch keine Ziele entdeckt", color = DarkWood)
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.padding(8.dp)) {
+                        items(currentDestinations) { city ->
+                            ListItem(
+                                headlineContent = { Text(text = city, color = DarkWood) },
+                                leadingContent = { Text("📍") },
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Button(
-            onClick = onBack,
-            modifier = Modifier.fillMaxWidth().height(60.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = CosyBlue, contentColor = DarkWood),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Text("Zurück zum Mixer", fontWeight = FontWeight.Bold)
+            Button(
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = WarmWood)
+            ) {
+                Text("Zurück", fontWeight = FontWeight.Bold, color = LemonChiffon)
+            }
         }
     }
 }
