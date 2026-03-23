@@ -23,28 +23,25 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(this)
         val settingsManager = SettingsManager(this)
 
-        // R2 & R5: Synchronisation mit MixerViewModelFactory-Signatur
+        // R2: Synchronisierte Signatur mit 3 Parametern
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(
-                database.travelDao(), // Erster Parameter (DAO)
-                settingsManager,      // Zweiter Parameter (Manager)
-                lifecycleScope        // Dritter Parameter (CoroutineScope)
+                database.travelDao(),
+                settingsManager,
+                lifecycleScope
             )
         }
 
         setContent {
             MixersReiseTheme {
-                // R5: Surface auf Transparent, damit der HomeScreen-Background (Box/SafeImage)
-                // nicht von der Theme-Hintergrundfarbe überlagert wird.
+                // R5: Surface auf Transparent für Hintergrund-Sichtbarkeit
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
                 ) {
                     HomeScreen(
                         viewModel = viewModel,
-                        onOpenMap = {
-                            // Map-Navigation hier (wird später implementiert)
-                        }
+                        onOpenMap = { /* Navigation folgt */ }
                     )
                 }
             }
