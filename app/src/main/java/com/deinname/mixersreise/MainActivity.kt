@@ -20,21 +20,23 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Datenbank und Settings initialisieren
         val database = AppDatabase.getDatabase(this)
         val settingsManager = SettingsManager(this)
 
-        // Hier wird die Factory mit 3 Argumenten aufgerufen.
-        // Der 'scope' ist der lifecycleScope der Activity.
+        // R5: Physischer Check der Parameter-Reihenfolge:
+        // 1. TravelDao, 2. SettingsManager, 3. CoroutineScope
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(
-                travelDao = database.travelDao(),
-                settingsManager = settingsManager,
-                scope = lifecycleScope
+                database.travelDao(),
+                settingsManager,
+                lifecycleScope
             )
         }
 
         setContent {
             MixersReiseTheme {
+                // R5: Surface auf Transparent, damit das Bild im HomeScreen (Box) sichtbar ist
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
@@ -42,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            // Navigation Logik
+                            // Navigation zur Map (späteres Feature)
                         }
                     )
                 }
