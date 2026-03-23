@@ -18,17 +18,15 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // Die Box legt das Hintergrundbild als unterste Ebene fest
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 1. Hintergrundbild (Zuerst zeichnen)
+        // FIX: contentDescription darf nicht null sein. Wir geben einen leeren String oder Text an.
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = null,
+            contentDescription = "Hintergrund Schlafzimmer",
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. Scaffold transparent machen, damit das Bild und das Theme-Gelb sichtbar bleiben
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -51,16 +49,12 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Mixer-Anzeige mit Fix für den Null-Fehler
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
-                    // FIX: Sicherstellen, dass speechText niemals null ist
                     speechText = viewModel.speechText.value ?: "",
                     showHearts = false
                 )
-
-                // Der StatsHeader wurde hier entfernt, da die MixerTopBar das Level bereits anzeigt
 
                 if (showSettings) {
                     SettingsDialog(
