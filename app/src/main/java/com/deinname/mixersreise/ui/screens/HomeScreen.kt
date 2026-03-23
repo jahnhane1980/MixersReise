@@ -18,18 +18,20 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Die Root-Box ist zwingend erforderlich, damit das Bild UNTER dem Scaffold liegt
+    // R5: Die Box ist der absolute Anker. Alles darin wird von oben nach unten gestapelt.
     Box(modifier = Modifier.fillMaxSize()) {
-        // LAYER 1: Das Hintergrundbild
+
+        // EBENE 1: Hintergrundbild (Muss ganz oben im Code stehen, um ganz unten im UI zu sein)
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "", // R1: Darf laut SafeImage.kt nicht null sein
+            contentDescription = "",
             modifier = Modifier.fillMaxSize()
         )
 
-        // LAYER 2: Das UI-Gerüst (Scaffold) muss transparent sein
+        // EBENE 2: UI-Gerüst
         Scaffold(
-            containerColor = Color.Transparent, // FIX: Verhindert die weiße Fläche
+            // WICHTIG: Wenn das nicht transparent ist, siehst du Ebene 1 nicht!
+            containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
@@ -45,6 +47,7 @@ fun HomeScreen(
                 )
             }
         ) { innerPadding ->
+            // EBENE 3: Mixer & Interaktion
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -56,8 +59,6 @@ fun HomeScreen(
                     speechText = viewModel.speechText.value,
                     showHearts = false
                 )
-
-                // FIX: StatsHeader hier entfernt, da MixerTopBar die Werte bereits anzeigt (Vermeidung von Dopplungen)
 
                 if (showSettings) {
                     SettingsDialog(
