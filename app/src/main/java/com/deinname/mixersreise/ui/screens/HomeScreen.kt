@@ -18,18 +18,18 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Box als Layer-Basis
+    // R5: Root-Box ermöglicht das Stapeln von Hintergrundbild und UI
     Box(modifier = Modifier.fillMaxSize()) {
-        // LAYER 1: Hintergrundbild
+        // LAYER 1: Hintergrundbild (Ganz unten)
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "", // FIX: Signatur von SafeImage erlaubt kein null
+            contentDescription = "", // R1/R5: Darf laut Signatur nicht null sein
             modifier = Modifier.fillMaxSize()
         )
 
         // LAYER 2: UI über transparentem Scaffold
         Scaffold(
-            containerColor = Color.Transparent, // FIX: Verhindert das Überlagern des Bildes durch Weiß
+            containerColor = Color.Transparent, // FIX: Verhindert die weiße Überlagerung
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
@@ -50,13 +50,14 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Mixer zentral anzeigen
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
                     speechText = viewModel.speechText.value,
                     showHearts = false
                 )
+
+                // FIX: StatsHeader entfernt, da MixerTopBar die Werte anzeigt
 
                 if (showSettings) {
                     SettingsDialog(

@@ -25,7 +25,6 @@ fun MixerTopBar(
 ) {
     TopAppBar(
         title = {
-            // R4-CHECK: Custom Styling statt Standard-Text
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -42,7 +41,6 @@ fun MixerTopBar(
             IconButton(onClick = onOpenMap) { Text("📍", fontSize = 24.sp) }
             IconButton(onClick = onOpenSettings) { Text("⚙️", fontSize = 24.sp) }
         },
-        // FIX: Hintergrund der Bar selbst auf Transparent
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
     )
 }
