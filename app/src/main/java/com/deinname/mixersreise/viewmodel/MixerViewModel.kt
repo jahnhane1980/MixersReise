@@ -25,7 +25,7 @@ class MixerViewModel(
     val destinations = listOf("Berlin", "Paris", "Tokio")
 
     init {
-        // Beispiel für eine Hintergrund-Logik mit dem übergebenen Scope
+        // Startet eine Endlosschleife im Hintergrund-Scope
         scope.launch {
             while(true) {
                 delay(10000)
