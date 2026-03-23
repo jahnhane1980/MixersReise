@@ -18,23 +18,27 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Container für korrektes Layering
+    // R5: Root-Box für das Layering
     Box(modifier = Modifier.fillMaxSize()) {
-        // Hintergrundbild - Fix: contentDescription darf nicht null sein
+        // Unterste Ebene: Hintergrundbild
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Hintergrund Schlafzimmer",
             modifier = Modifier.fillMaxSize()
         )
 
-        // Scaffold für die UI-Struktur
+        // Obere Ebene: UI-Komponenten
         Scaffold(
-            containerColor = Color.Transparent,
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent, // Macht den Scaffold-Hintergrund unsichtbar
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
                     hearts = viewModel.totalHearts.value,
-                    onOpenMap = onOpenMap,
+                    onOpenMap = {
+                        // R5: Direkte Ausführung des Navigations-Callbacks
+                        onOpenMap()
+                    },
                     onOpenSettings = { showSettings = true }
                 )
             },
@@ -50,7 +54,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Mixer Anzeige
+                // Zentrale Mixer-Animation
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
@@ -58,6 +62,7 @@ fun HomeScreen(
                     showHearts = false
                 )
 
+                // Overlay-Dialoge
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
