@@ -20,31 +20,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // R1: Physical Truth - getDatabase braucht context UND scope
         val database = AppDatabase.getDatabase(this, lifecycleScope)
         val settingsManager = SettingsManager(this)
 
-        // R2: Synchronisierte Übergabe an die Factory
+        // R5: Explizite Typ-Angabe für MixerViewModel behebt Inferenz-Fehler
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(
-                travelDao = database.travelDao(),
-                settingsManager = settingsManager,
-                scope = lifecycleScope
+                database.travelDao(),
+                settingsManager,
+                lifecycleScope
             )
         }
 
         setContent {
             MixersReiseTheme {
-                // R5: Transparenz-Fix für den HomeScreen-Hintergrund
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
                 ) {
                     HomeScreen(
                         viewModel = viewModel,
-                        onOpenMap = {
-                            // Navigation zur Map (später)
-                        }
+                        onOpenMap = { /* Navigation Logik */ }
                     )
                 }
             }

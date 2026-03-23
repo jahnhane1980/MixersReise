@@ -11,7 +11,6 @@ class MixerViewModelFactory(
     private val settingsManager: SettingsManager,
     private val scope: CoroutineScope
 ) : ViewModelProvider.Factory {
-
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MixerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
