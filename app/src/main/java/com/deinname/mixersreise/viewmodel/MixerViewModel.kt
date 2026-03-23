@@ -25,7 +25,6 @@ class MixerViewModel(
     val destinations = listOf("Berlin", "Paris", "Tokio")
 
     init {
-        // Startet eine Endlosschleife im Hintergrund-Scope
         scope.launch {
             while(true) {
                 delay(10000)

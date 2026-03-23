@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(this)
         val settingsManager = SettingsManager(this)
 
-        // R2 & R5: Erstellt das ViewModel mit allen notwendigen Abhängigkeiten
+        // Hier wird die Factory mit 3 Argumenten aufgerufen.
+        // Der 'scope' ist der lifecycleScope der Activity.
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(
                 travelDao = database.travelDao(),
@@ -34,8 +35,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MixersReiseTheme {
-                // Das Surface muss transparent sein, damit das Hintergrundbild
-                // im HomeScreen (Layering-Box) nicht überdeckt wird.
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.Transparent
@@ -43,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            // Navigation zur Map folgt später
+                            // Navigation Logik
                         }
                     )
                 }
