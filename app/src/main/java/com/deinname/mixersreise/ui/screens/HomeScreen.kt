@@ -18,23 +18,23 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Container stellt sicher, dass das Hintergrundbild ganz unten liegt
+    // R5: Root-Container für korrektes Layering
     Box(modifier = Modifier.fillMaxSize()) {
-        // Hintergrundbild
+        // Hintergrundbild - Fix: contentDescription darf nicht null sein
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = null,
+            contentDescription = "Hintergrund Schlafzimmer",
             modifier = Modifier.fillMaxSize()
         )
 
-        // Scaffold liegt darüber und ist transparent
+        // Scaffold für die UI-Struktur
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
                     hearts = viewModel.totalHearts.value,
-                    onOpenMap = onOpenMap, // Navigation zur Map
+                    onOpenMap = onOpenMap,
                     onOpenSettings = { showSettings = true }
                 )
             },
@@ -45,13 +45,12 @@ fun HomeScreen(
                 )
             }
         ) { innerPadding ->
-            // Der Content-Bereich des Scaffolds
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Hauptanzeige des Mixers
+                // Mixer Anzeige
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
@@ -59,7 +58,6 @@ fun HomeScreen(
                     showHearts = false
                 )
 
-                // Dialog-Overlay (wird nur angezeigt, wenn showSettings true ist)
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
