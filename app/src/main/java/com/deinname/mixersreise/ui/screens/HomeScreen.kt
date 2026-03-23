@@ -18,17 +18,18 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Box stellt sicher, dass das Bild ganz unten liegt
+    // R5: Root-Box als Layer-Basis
     Box(modifier = Modifier.fillMaxSize()) {
+        // LAYER 1: Hintergrundbild
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = null,
+            contentDescription = "", // FIX: Signatur von SafeImage erlaubt kein null
             modifier = Modifier.fillMaxSize()
         )
 
+        // LAYER 2: UI über transparentem Scaffold
         Scaffold(
-            // WICHTIG: Erlaubt den Durchblick auf das Bild in der Box
-            containerColor = Color.Transparent,
+            containerColor = Color.Transparent, // FIX: Verhindert das Überlagern des Bildes durch Weiß
             topBar = {
                 MixerTopBar(
                     level = viewModel.level,
@@ -49,6 +50,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                // Mixer zentral anzeigen
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
