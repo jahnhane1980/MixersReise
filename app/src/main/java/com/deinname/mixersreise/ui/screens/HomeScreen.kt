@@ -18,7 +18,7 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // Die Box sorgt dafür, dass das Hintergrundbild ganz unten liegt
+    // Die Box legt das Hintergrundbild als unterste Ebene fest
     Box(modifier = Modifier.fillMaxSize()) {
 
         // 1. Hintergrundbild (Zuerst zeichnen)
@@ -28,7 +28,7 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. Scaffold transparent machen, damit das Bild sichtbar bleibt
+        // 2. Scaffold transparent machen, damit das Bild und das Theme-Gelb sichtbar bleiben
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -51,16 +51,16 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Mixer-Anzeige
+                // Mixer-Anzeige mit Fix für den Null-Fehler
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
-                    // FIX: Sicherstellen, dass speechText nie null an die Komponente geht
+                    // FIX: Sicherstellen, dass speechText niemals null ist
                     speechText = viewModel.speechText.value ?: "",
                     showHearts = false
                 )
 
-                // StatsHeader hier entfernt, da MixerTopBar das Level bereits anzeigt.
+                // Der StatsHeader wurde hier entfernt, da die MixerTopBar das Level bereits anzeigt
 
                 if (showSettings) {
                     SettingsDialog(
