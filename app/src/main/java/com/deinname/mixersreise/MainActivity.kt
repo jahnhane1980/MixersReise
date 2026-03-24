@@ -19,13 +19,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // R5: Physikalische Initialisierung der Abhängigkeiten für die Factory
-        val database = AppDatabase.getDatabase(applicationContext)
+        // R5: Physikalische Prüfung der Signaturen
+        val scope = lifecycleScope
+
+        // FIX: Hier muss der scope AUCH übergeben werden (R2: Signature Synchronicity)
+        val database = AppDatabase.getDatabase(applicationContext, scope)
+
         val travelDao = database.travelDao()
         val settingsManager = SettingsManager(applicationContext)
-        val scope = lifecycleScope // Der CoroutineScope der Activity
 
         val viewModel: MixerViewModel by viewModels {
+            // R2: Hier wird der scope ebenfalls benötigt
             MixerViewModelFactory(travelDao, settingsManager, scope)
         }
 
