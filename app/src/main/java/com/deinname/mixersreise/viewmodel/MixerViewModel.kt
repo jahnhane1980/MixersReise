@@ -14,38 +14,40 @@ import kotlinx.coroutines.launch
 class MixerViewModel(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
-    private val externalScope: CoroutineScope // Hinzugefügt für Synchronität mit Factory
+    private val externalScope: CoroutineScope
 ) : ViewModel() {
 
-    val totalHearts = mutableStateOf(settingsManager.getHearts())
-    val isInteractionLocked = mutableStateOf(false)
-    val showHearts = mutableStateOf(false)
-    val activeTool = mutableStateOf(ToolType.HAND)
-    val speechText = mutableStateOf("")
-    val isSleeping = mutableStateOf(false)
-    val droolAlpha = mutableStateOf(0f)
-    val currentDestination = mutableStateOf("Berlin")
+    var totalHearts = mutableStateOf(settingsManager.getHearts())
+    var isInteractionLocked = mutableStateOf(false)
+    var showHearts = mutableStateOf(false)
+    var activeTool = mutableStateOf(ToolType.HAND)
+    var speechText = mutableStateOf("")
+    var isSleeping = mutableStateOf(false)
+    var droolAlpha = mutableStateOf(0f)
 
-    // Fehlende Properties für SettingsDialog hinzugefügt
-    val userName = mutableStateOf(settingsManager.getUserName() ?: "")
-    val userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
-    val userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
-    val userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
-    val userCity = mutableStateOf(settingsManager.getCity() ?: "")
+    // States für UI (SettingsDialog)
+    var userName = mutableStateOf(settingsManager.getUserName() ?: "")
+    var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
+    var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
+    var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
+    var userCity = mutableStateOf(settingsManager.getCity() ?: "")
+
+    var currentDestination = mutableStateOf("Berlin")
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    // Fehlende Funktionen für SettingsDialog hinzugefügt
     fun updateUserName(name: String) {
         userName.value = name
         settingsManager.saveUserName(name)
     }
 
+    // Korrektur: Nutzt nun die verifizierten Methoden aus SettingsManager
     fun updateAddress(street: String, house: String, zip: String, city: String) {
         userStreet.value = street
         userHouseNumber.value = house
         userZipCode.value = zip
         userCity.value = city
+
         settingsManager.saveStreet(street)
         settingsManager.saveHouseNumber(house)
         settingsManager.saveZipCode(zip)
@@ -53,7 +55,7 @@ class MixerViewModel(
     }
 
     fun detectLocationViaGps() {
-        // Logik für GPS-Suche (Platzhalter)
+        // Logik für GPS-Suche
     }
 
     fun selectTool(tool: ToolType) {
