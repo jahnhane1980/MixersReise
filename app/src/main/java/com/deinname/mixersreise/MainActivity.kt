@@ -9,9 +9,9 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import com.deinname.mixersreise.data.AppDatabase
 import com.deinname.mixersreise.data.SettingsManager
-// R1.1 Quittung: Physisch korrekte Pfade aus unterschiedlichen Paketen
+// R1.1 Quittung: Verifizierter Pfad aus ui.screens
 import com.deinname.mixersreise.ui.screens.HomeScreen
-import com.deinname.mixersreise.ui.components.MapScreen
+import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
@@ -37,14 +37,12 @@ class MainActivity : ComponentActivity() {
                     "home" -> HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            Log.d("MixerNav", "Navigiere zu Map")
                             currentScreen = "map"
                         }
                     )
                     "map" -> MapScreen(
                         viewModel = viewModel,
                         onBack = {
-                            Log.d("MixerNav", "Zurück zu Home")
                             currentScreen = "home"
                         }
                     )

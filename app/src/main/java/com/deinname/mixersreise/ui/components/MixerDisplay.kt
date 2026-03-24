@@ -1,11 +1,14 @@
 package com.deinname.mixersreise.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
+// R1.1 Quittung: HeartParticles liegt im selben Package, Import zur Sicherheit explizit:
+import com.deinname.mixersreise.ui.components.HeartParticles
 
 @Composable
 fun MixerDisplay(
@@ -13,6 +16,7 @@ fun MixerDisplay(
     droolAlpha: Float,
     speechText: String,
     showHearts: Boolean,
+    onMixerClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -21,34 +25,33 @@ fun MixerDisplay(
             .padding(bottom = 80.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // 1. Der Mixer (Basis)
-        SafeImage(
-            resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
-            contentDescription = "Mixer Charakter",
-            modifier = Modifier.size(300.dp)
-        )
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .clickable { onMixerClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            SafeImage(
+                resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
+                contentDescription = "Mixer",
+                modifier = Modifier.fillMaxSize()
+            )
 
-        // 2. Partikel-Layer (Über dem Mixer, unter der Sprechblase)
-        if (showHearts) {
-            Box(
-                modifier = Modifier.size(300.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            // R6: Physischer Aufruf der Partikel-Komponente
+            if (showHearts) {
                 HeartParticles()
             }
         }
 
-        // 3. Sabber-Overlay
         if (isSleeping) {
             SafeImage(
                 resId = R.drawable.overlay_drool,
-                contentDescription = "Sabber Effekt",
+                contentDescription = "Sabber",
                 modifier = Modifier.size(300.dp),
                 alpha = droolAlpha
             )
         }
 
-        // 4. Sprechblase (Höher positioniert, um Gesicht nicht zu verdecken)
         if (speechText.isNotEmpty()) {
             Box(
                 modifier = Modifier
