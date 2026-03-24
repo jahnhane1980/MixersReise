@@ -1,13 +1,13 @@
 package com.deinname.mixersreise.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.ui.components.ToolType // Angenommener Pfad des existierenden Enums
+// R1.1 Quittung: Absoluter Pfad verifiziert
+import com.deinname.mixersreise.viewmodel.ToolType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -17,7 +17,6 @@ class MixerViewModel(
     private val scope: kotlinx.coroutines.CoroutineScope
 ) : ViewModel() {
 
-    // States
     val totalHearts = mutableStateOf(0)
     val isSleeping = mutableStateOf(false)
     val droolAlpha = mutableStateOf(0f)
@@ -26,16 +25,6 @@ class MixerViewModel(
     val showHearts = mutableStateOf(false)
 
     val destinations = mutableStateListOf<String>()
-    val level = 1
-
-    // R6: Verwendet nun das global definierte ToolType Enum
-    fun selectTool(tool: ToolType) {
-        activeTool.value = tool
-        if (tool != ToolType.TALK) {
-            triggerHeartEffect()
-            totalHearts.value += 5
-        }
-    }
 
     fun triggerHeartEffect() {
         viewModelScope.launch {
@@ -45,15 +34,17 @@ class MixerViewModel(
         }
     }
 
-    fun feedMixer() {
-        speechText.value = "Mampf! Danke!"
-        triggerHeartEffect()
-        totalHearts.value += 10
-    }
-
     fun petMixer() {
         speechText.value = "Huiii, das kitzelt!"
         triggerHeartEffect()
         totalHearts.value += 2
+    }
+
+    fun selectTool(tool: ToolType) {
+        activeTool.value = tool
+        if (tool != ToolType.TALK) {
+            triggerHeartEffect()
+            totalHearts.value += 5
+        }
     }
 }
