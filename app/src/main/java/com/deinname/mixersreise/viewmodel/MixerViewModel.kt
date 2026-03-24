@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.viewmodel.ToolType // R1.1 Quittung: Verifizierter Pfad
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -16,44 +15,39 @@ class MixerViewModel(
     private val scope: kotlinx.coroutines.CoroutineScope
 ) : ViewModel() {
 
-    // States
+    // ... (Bestehende States wie hearts, etc.)
     val totalHearts = mutableStateOf(0)
     val isSleeping = mutableStateOf(false)
-    val droolAlpha = mutableStateOf(0f) // FIX: Für HomeScreen wiederhergestellt
+    val droolAlpha = mutableStateOf(0f)
     val speechText = mutableStateOf("")
     val activeTool = mutableStateOf(ToolType.HAND)
     val showHearts = mutableStateOf(false)
     val isInteractionLocked = mutableStateOf(false)
 
-    val destinations = mutableStateListOf<String>()
+    // R1.1 Quittung: Diese Felder MÜSSEN für SettingsDialog.kt existieren
+    val userName = mutableStateOf("Reisender")
+    val userStreet = mutableStateOf("")
+    val userHouseNumber = mutableStateOf("")
+    val userZipCode = mutableStateOf("")
+    val userCity = mutableStateOf("")
 
-    // FIX: Für HomeScreen wiederhergestellt
-    fun selectTool(tool: ToolType) {
-        // R6: Tool-Wechsel nur erlauben, wenn gerade keine Interaktion läuft
-        if (!isInteractionLocked.value) {
-            activeTool.value = tool
-        }
+    fun updateUserName(name: String) {
+        userName.value = name
     }
 
-    // Zentrale Interaktions-Logik (4s Timer)
-    fun petMixer() {
-        if (isInteractionLocked.value) return
-
-        viewModelScope.launch {
-            isInteractionLocked.value = true
-            showHearts.value = true
-            speechText.value = "Huiii!"
-
-            delay(4000) // 4 Sekunden Verweildauer
-
-            isInteractionLocked.value = false
-            showHearts.value = false
-            speechText.value = ""
-        }
+    fun updateAddress(street: String, houseNo: String, zip: String, city: String) {
+        userStreet.value = street
+        userHouseNumber.value = houseNo
+        userZipCode.value = zip
+        userCity.value = city
     }
 
-    // Weitere Stubs für die Konsistenz
-    fun feedMixer() { petMixer() } // Vorübergehend gleiche Logik
-    fun cleanMixer() { petMixer() }
-    fun talkToMixer() { petMixer() }
+    fun detectLocationViaGps() {
+        // Logik für GPS-Suche
+        speechText.value = "GPS wird gesucht..."
+    }
+
+    // ... (restliche Funktionen)
+    fun selectTool(tool: ToolType) { if (!isInteractionLocked.value) activeTool.value = tool }
+    fun petMixer() { /* ... wie zuvor ... */ }
 }

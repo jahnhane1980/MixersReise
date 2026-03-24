@@ -15,14 +15,20 @@ fun SettingsDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             shape = MaterialTheme.shapes.large
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Einstellungen", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    text = "Einstellungen",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Name eingeben
+                // Name - R6: Keine Composable-Injektion im onValueChange!
                 OutlinedTextField(
                     value = viewModel.userName.value,
                     onValueChange = { viewModel.updateUserName(it) },
@@ -32,33 +38,40 @@ fun SettingsDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Adresseingabe
-                Text(text = "Adresse für GPS-Simulation", style = MaterialTheme.typography.labelLarge)
-
+                // Straße
                 OutlinedTextField(
                     value = viewModel.userStreet.value,
-                    onValueChange = { viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value) },
-                    label = { Text("Straße") }
+                    onValueChange = {
+                        viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
+                    },
+                    label = { Text("Straße") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
+                // Hausnummer
                 OutlinedTextField(
                     value = viewModel.userHouseNumber.value,
-                    onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value) },
-                    label = { Text("Hausnummer") }
+                    onValueChange = {
+                        viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
+                    },
+                    label = { Text("Hausnummer") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
                     TextButton(onClick = onDismiss) {
                         Text("Abbrechen")
                     }
                     Button(onClick = {
-                        // R6: Nur Logik-Aufrufe hier, keine UI-Elemente!
                         viewModel.detectLocationViaGps()
                         onDismiss()
                     }) {
-                        Text("Speichern & GPS")
+                        Text("GPS Suche")
                     }
                 }
             }
