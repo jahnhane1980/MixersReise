@@ -13,7 +13,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.ToolType
-// R1.1 Quittung: Import der korrekt benannten Komponente
 import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 
 @Composable
@@ -32,12 +31,12 @@ fun MixerDisplay(
     ) {
         Box(
             modifier = Modifier
-                .offset(y = 120.dp) // Beibehalten des gewünschten Offsets nach unten
+                .offset(y = 120.dp)
                 .wrapContentSize(),
             contentAlignment = Alignment.Center
         ) {
 
-            // DIE MIXER-GRAFIK (Vordergrund)
+            // DIE MIXER-GRAFIK
             Image(
                 painter = painterResource(id = R.drawable.mixer_idle),
                 contentDescription = "Mixer",
@@ -48,6 +47,28 @@ fun MixerDisplay(
                         onClick = { onMixerClick() }
                     )
             )
+
+            // R6: WERKZEUG-LOGIK (Das "festklebende" Icon)
+            // Wenn eine Interaktion läuft und ein Werkzeug gewählt ist, wird es hier angezeigt
+            if (isInteractionLocked && activeTool != ToolType.NONE) {
+                val toolResId = when (activeTool) {
+                    ToolType.BRUSH -> R.drawable.ic_tool_brush
+                    ToolType.FEED -> R.drawable.ic_tool_feed
+                    ToolType.CLEAN -> R.drawable.ic_tool_clean
+                    else -> null
+                }
+
+                toolResId?.let { resId ->
+                    Image(
+                        painter = painterResource(id = resId),
+                        contentDescription = "Aktives Werkzeug",
+                        modifier = Modifier
+                            .size(60.dp)
+                            .offset(x = (-80).dp, y = 0.dp) // Klebt links am Mixer
+                            .animateContentSize()
+                    )
+                }
+            }
 
             // Schlafanimation
             if (isSleeping) {
@@ -62,7 +83,6 @@ fun MixerDisplay(
                     label = "SleepAlpha"
                 )
 
-                // R1.1 Quittung: Korrigierter Name mixer_sleeping
                 Image(
                     painter = painterResource(id = R.drawable.mixer_sleeping),
                     contentDescription = "Zzz",
@@ -75,7 +95,6 @@ fun MixerDisplay(
 
             // Sabber-Anzeige
             if (droolAlpha > 0f) {
-                // R1.1 Quittung: Korrigierter Name overlay_drool
                 Image(
                     painter = painterResource(id = R.drawable.overlay_drool),
                     contentDescription = "Speichel",
@@ -98,7 +117,6 @@ fun MixerDisplay(
                 modifier = Modifier
                     .offset(x = 0.dp, y = (-160).dp)
             ) {
-                // R1.1 Quittung: Verwendung von MixerSpeechBubble
                 MixerSpeechBubble(text = speechText)
             }
         }
