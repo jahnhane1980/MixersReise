@@ -31,7 +31,7 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
-                    value = viewModel.userName,
+                    value = viewModel.userName.value,
                     onValueChange = { viewModel.updateUserName(it) },
                     label = { Text("Name") },
                     modifier = Modifier.fillMaxWidth()
@@ -40,29 +40,29 @@ fun SettingsDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
-                    value = viewModel.userStreet,
-                    onValueChange = { viewModel.updateAddress(it, viewModel.userHouseNumber, viewModel.userZipCode, viewModel.userCity) },
+                    value = viewModel.userStreet.value,
+                    onValueChange = { viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value) },
                     label = { Text("Straße") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 OutlinedTextField(
-                    value = viewModel.userHouseNumber,
-                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, it, viewModel.userZipCode, viewModel.userCity) },
+                    value = viewModel.userHouseNumber.value,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value) },
                     label = { Text("Hausnummer") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 OutlinedTextField(
-                    value = viewModel.userZipCode,
-                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, viewModel.userHouseNumber, it, viewModel.userCity) },
+                    value = viewModel.userZipCode.value,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value) },
                     label = { Text("PLZ") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 OutlinedTextField(
-                    value = viewModel.userCity,
-                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, viewModel.userHouseNumber, viewModel.userZipCode, it) },
+                    value = viewModel.userCity.value,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it) },
                     label = { Text("Stadt") },
                     modifier = Modifier.fillMaxWidth()
                 )
