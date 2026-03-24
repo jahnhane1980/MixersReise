@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.theme.*
@@ -19,10 +20,10 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 @Composable
 fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Hintergrund Weltkarte
+        // Hintergrundbild der Weltkarte
         SafeImage(
             resId = R.drawable.bg_world_map,
-            contentDescription = "",
+            contentDescription = "Weltkarte Hintergrund",
             modifier = Modifier.fillMaxSize()
         )
 
@@ -55,10 +56,30 @@ fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
                     LazyColumn(modifier = Modifier.padding(8.dp)) {
                         items(currentDestinations) { city ->
                             ListItem(
-                                headlineContent = { Text(text = city, color = DarkWood) },
-                                leadingContent = { Text("📍") },
+                                // R6: Pinnadel durch Herz ersetzt
+                                leadingContent = {
+                                    Text("❤️", fontSize = 20.sp)
+                                },
+                                headlineContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = city,
+                                            color = DarkWood,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        // R6: Anzeige für Herz-Anzahl (vorerst Mockup/Statisch bis Logik steht)
+                                        Text(
+                                            text = "100", // Hier binden wir später die echten Daten an
+                                            color = DarkWood,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                },
                                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                             )
+                            HorizontalDivider(color = DarkWood.copy(alpha = 0.1f))
                         }
                     }
                 }
@@ -66,8 +87,11 @@ fun MapScreen(viewModel: MixerViewModel, onBack: () -> Unit) {
 
             Button(
                 onClick = onBack,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = WarmWood)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = WarmWood),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Zurück", fontWeight = FontWeight.Bold, color = LemonChiffon)
             }
