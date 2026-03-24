@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.lifecycleScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,35 +24,46 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Physischer Check: Datenbank und SettingsManager initialisieren
         val database = AppDatabase.getDatabase(this)
         val settingsManager = SettingsManager(this)
 
+        // Synchronisation: Factory benötigt laut Regel 2 genau diese zwei Parameter
         val viewModel: MixerViewModel by viewModels {
-            MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
+            MixerViewModelFactory(database.travelDao(), settingsManager)
         }
 
         setContent {
             MixersReiseTheme {
-                val navController = rememberNavController()
-                val scope = rememberCoroutineScope()
+                MainNavigation(viewModel)
+            }
+        }
+    }
+}
 
-                NavHost(navController = navController, startDestination = "home") {
-                    composable("home") {
-                        HomeScreen(
-                            viewModel = viewModel,
-                            onNavigateToWorld = { navController.navigate("world") },
-                            onOpenMap = { navController.navigate("map") }
-                        )
-                    }
-                    composable("world") {
-                        MixerWorldScreen(
-                            viewModel = viewModel
-                        )
-                    }
-                    composable("map") {
-                        MapScreen(viewModel = viewModel)
-                    }
-                }
+@Composable
+fun MainNavigation(viewModel: MixerViewModel) {
+    val navController = rememberNavController()
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("home") {
+                HomeScreen(
+                    viewModel = viewModel,
+                    onNavigateToMap = { navController.navigate("map") }
+                )
+            }
+            composable("map") {
+                MapScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

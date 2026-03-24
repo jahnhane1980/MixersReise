@@ -11,7 +11,7 @@ class SettingsManager(context: Context) {
     fun saveHearts(count: Int) = prefs.edit().putInt("total_hearts", count).apply()
     fun getHearts(): Int = prefs.getInt("total_hearts", 0)
 
-    // Neu hinzugefügt für Synchronität
+    // Notwendige Erweiterung für den SettingsDialog
     fun saveAddress(street: String, houseNumber: String, zipCode: String, city: String) {
         prefs.edit().apply {
             putString("street", street)
