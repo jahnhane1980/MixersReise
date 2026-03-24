@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.deinname.mixersreise.data.AppDatabase
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.ui.screens.HomeScreen
+import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
@@ -35,14 +36,18 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") {
                         HomeScreen(
-                            onNavigateToWorld = { navController.navigate("world") }
+                            viewModel = viewModel,
+                            onNavigateToWorld = { navController.navigate("world") },
+                            onOpenMap = { navController.navigate("map") }
                         )
                     }
                     composable("world") {
                         MixerWorldScreen(
                             viewModel = viewModel
-                            // onBack entfernt, da MixerWorldScreen diesen Parameter laut Fehler nicht hat
                         )
+                    }
+                    composable("map") {
+                        MapScreen(viewModel = viewModel)
                     }
                 }
             }

@@ -1,8 +1,7 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
@@ -18,39 +17,26 @@ class MixerViewModel(
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
-    // UI States für Mixer-Interaktion
-    var speechText by mutableStateOf("")
-    var droolAlpha by mutableFloatOf(0f)
-    var isSleeping by mutableStateOf(false)
-    var showHearts by mutableStateOf(false)
-    var isInteractionLocked by mutableStateOf(false)
-    var activeTool by mutableStateOf<ToolType?>(null)
-
-    // Stats
-    var totalHearts by mutableStateOf(settingsManager.getHearts())
-        private set
+    // States als explizite MutableState für .value Zugriff im UI/Handler
+    val speechText = mutableStateOf("")
+    val droolAlpha = mutableStateOf(0f)
+    val isSleeping = mutableStateOf(false)
+    val showHearts = mutableStateOf(false)
+    val isInteractionLocked = mutableStateOf(false)
+    val activeTool: MutableState<ToolType?> = mutableStateOf(null)
+    val totalHearts = mutableStateOf(settingsManager.getHearts())
 
     // User Settings
-    var userName by mutableStateOf(settingsManager.getUserName() ?: "")
-        private set
-    var userStreet by mutableStateOf(settingsManager.getStreet() ?: "")
-        private set
-    var userHouseNumber by mutableStateOf(settingsManager.getHouseNumber() ?: "")
-        private set
-    var userZipCode by mutableStateOf(settingsManager.getZipCode() ?: "")
-        private set
-    var userCity by mutableStateOf(settingsManager.getCity() ?: "")
-        private set
+    var userName = settingsManager.getUserName() ?: ""
+    var userStreet = settingsManager.getStreet() ?: ""
+    var userHouseNumber = settingsManager.getHouseNumber() ?: ""
+    var userZipCode = settingsManager.getZipCode() ?: ""
+    var userCity = settingsManager.getCity() ?: ""
 
-    // Datenbank Flows (Synchronisation mit MapScreen)
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     fun selectTool(tool: ToolType?) {
-        activeTool = tool
-    }
-
-    fun petMixer() {
-        // Logik wird im InteractionHandler ausgeführt, hier nur als Trigger falls nötig
+        activeTool.value = tool
     }
 
     fun updateUserName(newName: String) {
@@ -67,16 +53,23 @@ class MixerViewModel(
     }
 
     fun addHeart() {
-        totalHearts++
-        settingsManager.saveHearts(totalHearts)
+        totalHearts.value++
+        settingsManager.saveHearts(totalHearts.value)
     }
 
     fun detectLocationViaGps() { /* Mock */ }
 
+    fun petMixer() { /* Interaction Logik */ }
+
     fun addDestination(cityName: String, lat: Double, lon: Double) {
         viewModelScope.launch {
-            // Prüfung der TravelDestination Parameter (cityName, latitude, longitude)
-            travelDao.insert(TravelDestination(cityName = cityName, latitude = lat, longitude = lon, heartsCollected = 0))
+            // Verifizierung mit TravelDestination.kt: cityName, latitude, longitude
+            travelDao.insert(TravelDestination(
+                cityName = cityName,
+                latitude = lat,
+                longitude = lon,
+                heartsCollected = 0
+            ))
         }
     }
 }
