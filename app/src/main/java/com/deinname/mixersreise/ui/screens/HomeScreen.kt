@@ -18,7 +18,7 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 fun HomeScreen(
     viewModel: MixerViewModel,
     onOpenMap: () -> Unit,
-    onNavigateToWorld: () -> Unit // Synchronisation mit NavHost Fehlermeldung
+    onNavigateToWorld: () -> Unit // Signatur-Synchronität mit MainActivity
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
@@ -29,7 +29,7 @@ fun HomeScreen(
     ) {
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Schlafzimmer mit Kuscheltieren",
+            contentDescription = "Schlafzimmer",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -39,7 +39,6 @@ fun HomeScreen(
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
-                    // Physischer Check: MixerViewModel.totalHearts ist MutableState<Int>
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = { onOpenMap() },
                     onOpenSettings = { showSettings = true }
@@ -47,7 +46,6 @@ fun HomeScreen(
             },
             bottomBar = {
                 MixerToolBar(
-                    // Physischer Check: activeTool ist MutableState<ToolType>
                     activeTool = viewModel.activeTool.value,
                     onToolSelected = { viewModel.selectTool(it) }
                 )

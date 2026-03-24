@@ -14,20 +14,47 @@ import kotlinx.coroutines.launch
 class MixerViewModel(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
-    private val externalScope: CoroutineScope
+    private val externalScope: CoroutineScope // Hinzugefügt für Synchronität mit Factory
 ) : ViewModel() {
 
-    var totalHearts = mutableStateOf(settingsManager.getHearts())
-    var isInteractionLocked = mutableStateOf(false)
-    var showHearts = mutableStateOf(false)
-    var activeTool = mutableStateOf(ToolType.HAND)
-    var speechText = mutableStateOf("")
-    var isSleeping = mutableStateOf(false)
-    var droolAlpha = mutableStateOf(0f)
+    val totalHearts = mutableStateOf(settingsManager.getHearts())
+    val isInteractionLocked = mutableStateOf(false)
+    val showHearts = mutableStateOf(false)
+    val activeTool = mutableStateOf(ToolType.HAND)
+    val speechText = mutableStateOf("")
+    val isSleeping = mutableStateOf(false)
+    val droolAlpha = mutableStateOf(0f)
+    val currentDestination = mutableStateOf("Berlin")
 
-    var currentDestination = mutableStateOf("Berlin")
+    // Fehlende Properties für SettingsDialog hinzugefügt
+    val userName = mutableStateOf(settingsManager.getUserName() ?: "")
+    val userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
+    val userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
+    val userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
+    val userCity = mutableStateOf(settingsManager.getCity() ?: "")
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
+
+    // Fehlende Funktionen für SettingsDialog hinzugefügt
+    fun updateUserName(name: String) {
+        userName.value = name
+        settingsManager.saveUserName(name)
+    }
+
+    fun updateAddress(street: String, house: String, zip: String, city: String) {
+        userStreet.value = street
+        userHouseNumber.value = house
+        userZipCode.value = zip
+        userCity.value = city
+        settingsManager.saveStreet(street)
+        settingsManager.saveHouseNumber(house)
+        settingsManager.saveZipCode(zip)
+        settingsManager.saveCity(city)
+    }
+
+    fun detectLocationViaGps() {
+        // Logik für GPS-Suche (Platzhalter)
+    }
 
     fun selectTool(tool: ToolType) {
         activeTool.value = tool
@@ -35,18 +62,12 @@ class MixerViewModel(
 
     fun petMixer() {
         if (isInteractionLocked.value) return
-
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
             totalHearts.value += 1
-
             settingsManager.saveHearts(totalHearts.value)
-
-            currentDestination.value.let { cityName ->
-                travelDao.addHeartsToCity(cityName, 1)
-            }
-
+            currentDestination.value.let { travelDao.addHeartsToCity(it, 1) }
             delay(4000)
             showHearts.value = false
             isInteractionLocked.value = false

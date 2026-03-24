@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,15 +16,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
-import com.deinname.mixersreise.data.TravelDestination
 import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.theme.LemonChiffon
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
-fun MapScreen(viewModel: MixerViewModel) {
-    // Fix: Explizite Typangabe für TravelDestination zur Behebung des Inferenz-Fehlers
-    val destinations by viewModel.allDestinations.collectAsState(initial = emptyList<TravelDestination>())
+fun MapScreen(
+    viewModel: MixerViewModel,
+    onBack: () -> Unit // Hinzugefügt für Synchronität mit MainActivity
+) {
+    val destinations by viewModel.allDestinations.collectAsState(initial = emptyList())
 
     Box(
         modifier = Modifier
@@ -33,7 +34,7 @@ fun MapScreen(viewModel: MixerViewModel) {
     ) {
         SafeImage(
             resId = R.drawable.bg_world_map,
-            contentDescription = "Weltkarte Hintergrund",
+            contentDescription = "Weltkarte",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
@@ -44,7 +45,15 @@ fun MapScreen(viewModel: MixerViewModel) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            // Zurück-Button hinzugefügt (DIP - Native Integration)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.Start)
+            ) {
+                Text("← Back", color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
 
             Box(
                 modifier = Modifier
@@ -55,9 +64,7 @@ fun MapScreen(viewModel: MixerViewModel) {
                 LazyColumn {
                     items(destinations) { destination ->
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(text = "❤️", fontSize = 18.sp)
