@@ -13,7 +13,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.ToolType
-import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 
 @Composable
 fun MixerDisplay(
@@ -22,22 +21,20 @@ fun MixerDisplay(
     speechText: String,
     showHearts: Boolean,
     isInteractionLocked: Boolean,
-    activeTool: ToolType,
+    activeTool: ToolType?, // Fix: Typ auf nullable geändert
     onMixerClick: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // Zentraler Container mit dem visuellen Versatz nach unten (120.dp)
         Box(
             modifier = Modifier
                 .offset(y = 120.dp)
                 .wrapContentSize(),
             contentAlignment = Alignment.Center
         ) {
-
-            // DIE MIXER-GRAFIK (mixer_idle)
+            // Hauptgrafik Mixer
             Image(
                 painter = painterResource(id = R.drawable.mixer_idle),
                 contentDescription = "Mixer",
@@ -49,13 +46,12 @@ fun MixerDisplay(
                     )
             )
 
-            // R7: WERKZEUG-LOGIK (Exakt nach deiner ToolType-Definition)
+            // Werkzeug-Anzeige während der Interaktion
             if (isInteractionLocked) {
                 val toolResId = when (activeTool) {
                     ToolType.FOOD -> R.drawable.tool_food
-                    //ToolType.CLEAN -> R.drawable.ic_tool_clean
-                    ToolType.SPONGE -> R.drawable.tool_sponge // Mapping falls gleiches Icon
-                    ToolType.COKE -> R.drawable.tool_coke  // Mapping falls gleiches Icon
+                    ToolType.SPONGE -> R.drawable.tool_sponge
+                    ToolType.COKE -> R.drawable.tool_coke
                     ToolType.HAND -> R.drawable.tool_hand
                     ToolType.TALK -> R.drawable.tool_talk
                     else -> null
@@ -72,9 +68,9 @@ fun MixerDisplay(
                 }
             }
 
-            // Schlafanimation (mixer_sleeping)
+            // Schlaf-Animation
             if (isSleeping) {
-                val infiniteTransition = rememberInfiniteTransition(label = "SleepTransition")
+                val infiniteTransition = rememberInfiniteTransition(label = "Sleep")
                 val sleepAlpha by infiniteTransition.animateFloat(
                     initialValue = 0f,
                     targetValue = 1f,
@@ -87,7 +83,7 @@ fun MixerDisplay(
 
                 Image(
                     painter = painterResource(id = R.drawable.mixer_sleeping),
-                    contentDescription = "Zzz",
+                    contentDescription = "Schläft",
                     modifier = Modifier
                         .size(60.dp)
                         .offset(x = 60.dp, y = (-70).dp)
@@ -95,11 +91,11 @@ fun MixerDisplay(
                 )
             }
 
-            // Sabber-Anzeige (overlay_drool)
+            // Sabber-Overlay
             if (droolAlpha > 0f) {
                 Image(
                     painter = painterResource(id = R.drawable.overlay_drool),
-                    contentDescription = "Speichel",
+                    contentDescription = "Sabber",
                     modifier = Modifier
                         .size(40.dp)
                         .offset(x = (-10).dp, y = 50.dp)
@@ -107,18 +103,17 @@ fun MixerDisplay(
                 )
             }
 
-            // Herzen-Animation
+            // Herzen-Effekt
             if (showHearts) {
                 HeartParticles()
             }
 
-            // Sprechblase (MixerSpeechBubble)
+            // Sprechblase
             AnimatedVisibility(
                 visible = speechText.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
-                modifier = Modifier
-                    .offset(x = 0.dp, y = (-160).dp)
+                modifier = Modifier.offset(y = (-160).dp)
             ) {
                 MixerSpeechBubble(text = speechText)
             }

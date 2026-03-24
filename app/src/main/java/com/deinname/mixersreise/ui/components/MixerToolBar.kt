@@ -21,19 +21,14 @@ import com.deinname.mixersreise.viewmodel.ToolType
 
 @Composable
 fun MixerToolBar(
-    activeTool: ToolType,
+    activeTool: ToolType?, // Fix: Typ auf nullable geändert
     onToolSelected: (ToolType) -> Unit
 ) {
-    // Wir nutzen jetzt unsere neuen Farben aus der Color.kt
-    val barBackground = DarkWood
-    val activeCircleColor = CosyBlue
-    val inactiveCircleColor = LemonChiffon.copy(alpha = 0.15f)
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(84.dp),
-        color = barBackground
+        color = DarkWood
     ) {
         Row(
             modifier = Modifier
@@ -42,11 +37,11 @@ fun MixerToolBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            ToolButton(ToolType.FOOD, R.drawable.tool_food, activeTool, onToolSelected, activeCircleColor, inactiveCircleColor)
-            ToolButton(ToolType.HAND, R.drawable.tool_hand, activeTool, onToolSelected, activeCircleColor, inactiveCircleColor)
-            ToolButton(ToolType.SPONGE, R.drawable.tool_sponge, activeTool, onToolSelected, activeCircleColor, inactiveCircleColor)
-            ToolButton(ToolType.TALK, R.drawable.tool_talk, activeTool, onToolSelected, activeCircleColor, inactiveCircleColor)
-            ToolButton(ToolType.COKE, R.drawable.tool_coke, activeTool, onToolSelected, activeCircleColor, inactiveCircleColor)
+            ToolButton(ToolType.FOOD, R.drawable.tool_food, activeTool, onToolSelected)
+            ToolButton(ToolType.HAND, R.drawable.tool_hand, activeTool, onToolSelected)
+            ToolButton(ToolType.SPONGE, R.drawable.tool_sponge, activeTool, onToolSelected)
+            ToolButton(ToolType.TALK, R.drawable.tool_talk, activeTool, onToolSelected)
+            ToolButton(ToolType.COKE, R.drawable.tool_coke, activeTool, onToolSelected)
         }
     }
 }
@@ -55,10 +50,8 @@ fun MixerToolBar(
 fun ToolButton(
     tool: ToolType,
     resId: Int,
-    activeTool: ToolType,
-    onToolSelected: (ToolType) -> Unit,
-    activeColor: Color,
-    inactiveColor: Color
+    activeTool: ToolType?, // Fix: Typ auf nullable geändert
+    onToolSelected: (ToolType) -> Unit
 ) {
     val isSelected = activeTool == tool
 
@@ -66,7 +59,7 @@ fun ToolButton(
         modifier = Modifier
             .size(60.dp)
             .clip(CircleShape)
-            .background(if (isSelected) activeColor else inactiveColor)
+            .background(if (isSelected) CosyBlue else LemonChiffon.copy(alpha = 0.15f))
             .clickable { onToolSelected(tool) },
         contentAlignment = Alignment.Center
     ) {
@@ -74,7 +67,6 @@ fun ToolButton(
             painter = painterResource(id = resId),
             contentDescription = null,
             modifier = Modifier.size(36.dp),
-            // WICHTIG: Kein Tint, damit die farbigen Icons erhalten bleiben
             tint = Color.Unspecified
         )
     }
