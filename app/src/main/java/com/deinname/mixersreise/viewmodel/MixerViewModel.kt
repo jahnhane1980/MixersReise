@@ -1,86 +1,63 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.TravelDao
-import com.deinname.mixersreise.data.SettingsManager
+import com.deinname.mixersreise.data.TravelDestination
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MixerViewModel(
-    private val travelDao: TravelDao,
-    private val settingsManager: SettingsManager,
-    private val scope: kotlinx.coroutines.CoroutineScope
-) : ViewModel() {
+enum class ToolType {
+    HAND, FOOD, CLEAN, TALK, SPONGE, COKE
+}
 
-    val totalHearts = mutableStateOf(0)
-    val isSleeping = mutableStateOf(false)
-    val droolAlpha = mutableStateOf(0f)
-    val speechText = mutableStateOf("")
-    val activeTool = mutableStateOf(ToolType.HAND)
-    val showHearts = mutableStateOf(false)
-    val isInteractionLocked = mutableStateOf(false)
+class MixerViewModel(private val travelDao: TravelDao) : ViewModel() {
 
-    val userName = mutableStateOf("")
-    val userStreet = mutableStateOf("")
-    val userHouseNumber = mutableStateOf("")
-    val userZipCode = mutableStateOf("")
-    val userCity = mutableStateOf("")
+    // States für den Mixer
+    var totalHearts = mutableStateOf(0)
+    var isInteractionLocked = mutableStateOf(false)
+    var showHearts = mutableStateOf(false)
+    var activeTool = mutableStateOf(ToolType.HAND) // Standard
+    var speechText = mutableStateOf("")
+    var isSleeping = mutableStateOf(false)
+    var droolAlpha = mutableStateOf(0f)
 
-    val destinations = mutableStateListOf<String>()
-    private val interactionHandler = MixerInteractionHandler(this)
+    // Standort-Logik
+    var currentDestination = mutableStateOf("Berlin") // Beispiel-Startwert
 
-    init {
-        loadData()
-    }
+    // Datenbank-Flow für die Map
+    val allDestinations = travelDao.getAllDestinations()
 
-    private fun loadData() {
-        // R1.1 Quittung: Jetzt physisch im SettingsManager vorhanden
-        totalHearts.value = settingsManager.getHearts()
-        userName.value = settingsManager.getUserName() ?: "Mixer-Freund"
-        userStreet.value = settingsManager.getStreet() ?: ""
-        userHouseNumber.value = settingsManager.getHouseNumber() ?: ""
-        userZipCode.value = settingsManager.getZipCode() ?: ""
-        userCity.value = settingsManager.getCity() ?: ""
-
-        destinations.clear()
-        destinations.addAll(listOf("Berlin", "Paris", "London"))
+    fun selectTool(tool: ToolType) {
+        activeTool.value = tool
     }
 
     fun petMixer() {
         if (isInteractionLocked.value) return
+
         viewModelScope.launch {
-            interactionHandler.execute(activeTool.value)
-            settingsManager.saveHearts(totalHearts.value)
+            isInteractionLocked.value = true
+            showHearts.value = true
+
+            // 1. Globalen Counter erhöhen
+            totalHearts.value += 1
+
+            // 2. R7: Datenbank-Update für die aktuelle Stadt
+            currentDestination.value?.let { cityName ->
+                travelDao.addHeartsToCity(cityName, 1)
+            }
+
+            // Interaktions-Dauer (4 Sekunden)
+            delay(4000)
+
+            showHearts.value = false
+            isInteractionLocked.value = false
         }
     }
 
-    fun selectTool(tool: ToolType) {
-        if (!isInteractionLocked.value) activeTool.value = tool
-    }
-
-    fun updateUserName(name: String) {
-        userName.value = name
-        settingsManager.saveUserName(name)
-    }
-
-    fun updateAddress(s: String, h: String, z: String, c: String) {
-        userStreet.value = s; userHouseNumber.value = h; userZipCode.value = z; userCity.value = c
-        settingsManager.saveStreet(s)
-        settingsManager.saveHouseNumber(h)
-        settingsManager.saveZipCode(z)
-        settingsManager.saveCity(c)
-    }
-
-    fun detectLocationViaGps() {
-        viewModelScope.launch {
-            speechText.value = "GPS Scan für ${userCity.value}..."
-            delay(2000)
-            speechText.value = "Bereit!"
-            delay(1000)
-            speechText.value = ""
-        }
-    }
+    // Weitere Logik für Schlafen/Sabbern hier...
 }

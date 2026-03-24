@@ -4,115 +4,85 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.theme.LemonChiffon
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(
-    viewModel: MixerViewModel,
-    onBack: () -> Unit
-) {
+fun MapScreen(viewModel: MixerViewModel) {
+    val destinations by viewModel.allDestinations.collectAsState(initial = emptyList())
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Weltkarte (Mit ContentScale.Crop für volle Fläche)
-        // R1.1 Quittung: bg_world_map physisch vorhanden
+        // Hintergrundbild der Weltkarte
         SafeImage(
             resId = R.drawable.bg_world_map,
-            contentDescription = "Weltkarte",
+            contentDescription = "Weltkarte Hintergrund",
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // FIX: Zieht das Bild über den ganzen Bereich
+            contentScale = ContentScale.Crop
         )
 
-        // LAYER 2: UI
-        Column(modifier = Modifier.fillMaxSize()) {
+        // Die Reise-Tabelle
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // TopBar
-            Row(
+            // Tabelle-Container (50% Weiß-Transparenz laut Regel)
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .background(Color.White.copy(alpha = 0.5f))
+                    .padding(8.dp)
             ) {
-                IconButton(
-                    onClick = onBack,
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.White.copy(alpha = 0.5f))
-                ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Zurück", tint = Color.Black)
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = "Weltkarte",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.Black
-                )
-            }
-
-            // Tabelle (50% Weiß, ohne Header)
-            Card(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White.copy(alpha = 0.5f)
-                ),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // R6: Header-Zeile wurde wie gewünscht entfernt
-
-                    items(viewModel.destinations) { destination ->
+                LazyColumn {
+                    items(destinations) { destination ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 20.dp),
+                                .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Spalte 1: Herzchen Symbol
-                            Text(
-                                text = "❤️",
-                                modifier = Modifier.width(40.dp)
-                            )
+                            // Herzen-Icon (Platzhalter für echtes Asset oder Text-Emoji)
+                            Text(text = "❤️", fontSize = 18.sp)
 
-                            // Spalte 2: Anzahl (Dummy 0)
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // ECHTE HERZ-ANZAHL AUS DER DB
                             Text(
-                                text = "0",
-                                modifier = Modifier.width(60.dp),
-                                style = MaterialTheme.typography.bodyLarge,
+                                text = "${destination.heartsCollected}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
                                 color = Color.Black
                             )
 
-                            // Spalte 3: Stadtname
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            // STADTNAME
                             Text(
-                                text = destination,
-                                style = MaterialTheme.typography.bodyLarge,
+                                text = destination.cityName,
+                                fontSize = 18.sp,
                                 color = Color.Black
                             )
                         }
-                        // Dezente Trennlinie zwischen den Städten
-                        Divider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = Color.Black.copy(alpha = 0.1f)
-                        )
                     }
                 }
             }
