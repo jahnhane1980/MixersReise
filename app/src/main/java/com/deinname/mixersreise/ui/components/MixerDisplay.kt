@@ -29,6 +29,7 @@ fun MixerDisplay(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        // Der Haupt-Container für den Mixer mit dem gewünschten Offset nach unten
         Box(
             modifier = Modifier
                 .offset(y = 120.dp)
@@ -36,7 +37,7 @@ fun MixerDisplay(
             contentAlignment = Alignment.Center
         ) {
 
-            // DIE MIXER-GRAFIK
+            // DIE MIXER-GRAFIK (Vordergrund)
             Image(
                 painter = painterResource(id = R.drawable.mixer_idle),
                 contentDescription = "Mixer",
@@ -48,7 +49,8 @@ fun MixerDisplay(
                     )
             )
 
-            // R1.1 Quittung: Korrigierte Enum-Referenzen und Ressourcen-Namen
+            // R7 & R1.1: WERKZEUG-LOGIK (Klebt am Mixer während der Interaktion)
+            // Nutzt die kleingeschriebenen Enums und korrekten Dateinamen
             if (isInteractionLocked && activeTool != ToolType.None) {
                 val toolResId = when (activeTool) {
                     ToolType.Brush -> R.drawable.tool_brush
@@ -68,7 +70,7 @@ fun MixerDisplay(
                 }
             }
 
-            // Schlafanimation
+            // Schlafanimation (mixer_sleeping)
             if (isSleeping) {
                 val infiniteTransition = rememberInfiniteTransition(label = "SleepTransition")
                 val sleepAlpha by infiniteTransition.animateFloat(
@@ -91,7 +93,7 @@ fun MixerDisplay(
                 )
             }
 
-            // Sabber-Anzeige
+            // Sabber-Anzeige (overlay_drool)
             if (droolAlpha > 0f) {
                 Image(
                     painter = painterResource(id = R.drawable.overlay_drool),
@@ -103,11 +105,12 @@ fun MixerDisplay(
                 )
             }
 
+            // Herzen-Animation
             if (showHearts) {
                 HeartParticles()
             }
 
-            // Sprechblase
+            // Sprechblase (MixerSpeechBubble)
             AnimatedVisibility(
                 visible = speechText.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
