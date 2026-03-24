@@ -1,70 +1,53 @@
 package com.deinname.mixersreise.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.deinname.mixersreise.data.SettingsManager
+import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.TravelDao
-import kotlinx.coroutines.CoroutineScope
+import com.deinname.mixersreise.data.SettingsManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MixerViewModel(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
-    private val scope: CoroutineScope
+    private val scope: kotlinx.coroutines.CoroutineScope
 ) : ViewModel() {
 
-    // Stats
-    var level = 1
-    var totalHearts = mutableStateOf(0)
-    var activeTool = mutableStateOf(ToolType.HAND)
+    // States
+    val totalHearts = mutableStateOf(0)
+    val isSleeping = mutableStateOf(false)
+    val droolAlpha = mutableStateOf(0f)
+    val speechText = mutableStateOf("")
+    val activeTool = mutableStateOf(ToolType.HAND)
+    val showHearts = mutableStateOf(false) // Trigger für Animation
 
-    // Mixer State
-    var isSleeping = mutableStateOf(false)
-    var droolAlpha = mutableStateOf(0f)
-    var speechText = mutableStateOf("Hallo! Ich bin Mixer.")
-
-    // User Settings
-    var userName = mutableStateOf("Mixer-Freund")
-    var userStreet = mutableStateOf("")
-    var userHouseNumber = mutableStateOf("")
-    var userZipCode = mutableStateOf("")
-    var userCity = mutableStateOf("")
-
-    val destinations = listOf("Berlin", "Paris", "Tokio")
-
-    init {
-        scope.launch {
-            while(true) {
-                delay(10000)
-                if (isSleeping.value) {
-                    droolAlpha.value = (droolAlpha.value + 0.1f).coerceAtMost(1.0f)
-                }
-            }
-        }
-    }
+    val destinations = mutableStateListOf<String>()
+    val level = 1 // Intern noch da, aber UI nutzt es nicht mehr
 
     fun selectTool(tool: ToolType) {
         activeTool.value = tool
-        when(tool) {
-            ToolType.FOOD, ToolType.COKE -> feedMixer()
-            ToolType.HAND -> petMixer()
-            ToolType.CLEAN, ToolType.SPONGE -> cleanMixer()
-            ToolType.TALK -> talkToMixer()
+        // Bei Auswahl eines Tools (außer Talk) direkt Effekt zeigen
+        if (tool != ToolType.TALK) {
+            triggerHeartEffect()
+            totalHearts.value += 5 // Kleine Belohnung für die Interaktion
         }
     }
 
-    fun feedMixer() { totalHearts.value += 5; speechText.value = "Mjam!" }
-    fun petMixer() { totalHearts.value += 2; speechText.value = "Purr..." }
-    fun cleanMixer() { droolAlpha.value = 0f; speechText.value = "Glänzend!" }
-    fun talkToMixer() { speechText.value = "Echt jetzt?" }
-
-    fun updateUserName(newName: String) { userName.value = newName }
-    fun updateAddress(street: String, houseNr: String, zip: String, city: String) {
-        userStreet.value = street
-        userHouseNumber.value = houseNr
-        userZipCode.value = zip
-        userCity.value = city
+    // R6: Effekt-Trigger mit automatischem Reset
+    fun triggerHeartEffect() {
+        viewModelScope.launch {
+            showHearts.value = true
+            delay(2000) // Animation läuft 1.5 - 2 Sekunden
+            showHearts.value = false
+        }
     }
-    fun detectLocationViaGps() { /* Placeholder */ }
+
+    // Weitere Funktionen (Stubs für die Logik)
+    fun feedMixer() {
+        speechText.value = "Mampf! Danke!"
+        triggerHeartEffect()
+        // Logik für Hunger-Reduktion hier einfügen
+    }
 }

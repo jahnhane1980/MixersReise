@@ -15,36 +15,45 @@ fun MixerDisplay(
     showHearts: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // Root-Box für den Mixer-Bereich
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 80.dp), // Position im unteren Drittel
+            .padding(bottom = 80.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        // 1. Der Mixer (Basis-Bild)
+        // 1. Der Mixer (Basis)
         SafeImage(
             resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
-            contentDescription = "Mixer",
+            contentDescription = "Mixer Charakter",
             modifier = Modifier.size(300.dp)
         )
 
-        // 2. Sabber-Overlay
+        // 2. Partikel-Layer (Über dem Mixer, unter der Sprechblase)
+        if (showHearts) {
+            Box(
+                modifier = Modifier.size(300.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                HeartParticles()
+            }
+        }
+
+        // 3. Sabber-Overlay
         if (isSleeping) {
             SafeImage(
                 resId = R.drawable.overlay_drool,
-                contentDescription = "Sabber",
+                contentDescription = "Sabber Effekt",
                 modifier = Modifier.size(300.dp),
                 alpha = droolAlpha
             )
         }
 
-        // 3. Sprechblase (R6: Padding erhöht, um das Gesicht nicht zu verdecken)
+        // 4. Sprechblase (Höher positioniert, um Gesicht nicht zu verdecken)
         if (speechText.isNotEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 360.dp), // Von 220.dp auf 360.dp erhöht
+                    .padding(bottom = 360.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
                 MixerSpeechBubble(text = speechText)
