@@ -20,7 +20,7 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Box mit LemonChiffon statt Weiß als Basis
+    // R1.1 & R5: Root-Container mit LemonChiffon Hintergrund
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -33,13 +33,12 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // LAYER 2: UI (Scaffold)
+        // LAYER 2: UI Struktur
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
-                    // R2: 'level' entfernt, nur noch 'hearts' wird übergeben
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = { onOpenMap() },
                     onOpenSettings = { showSettings = true }
@@ -57,15 +56,19 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Zentrales Mixer Display
+                // R2: MixerDisplay Aufruf synchronisiert mit neuem Click-Handler
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
                     speechText = viewModel.speechText.value,
-                    showHearts = false
+                    showHearts = viewModel.showHearts.value,
+                    onMixerClick = {
+                        // Verknüpfung mit der Interaktions-Logik
+                        viewModel.petMixer()
+                    }
                 )
 
-                // Dialog Overlays
+                // Overlay Dialoge
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
