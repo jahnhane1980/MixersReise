@@ -27,84 +27,57 @@ fun SettingsDialog(
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text(
-                    text = "Einstellungen",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-
+                Text(text = "Einstellungen", style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Name
                 OutlinedTextField(
-                    value = viewModel.userName.value,
+                    value = viewModel.userName,
                     onValueChange = { viewModel.updateUserName(it) },
-                    label = { Text("Dein Name") },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = viewModel.userStreet,
+                    onValueChange = { viewModel.updateAddress(it, viewModel.userHouseNumber, viewModel.userZipCode, viewModel.userCity) },
+                    label = { Text("Straße") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = viewModel.userHouseNumber,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, it, viewModel.userZipCode, viewModel.userCity) },
+                    label = { Text("Hausnummer") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = viewModel.userZipCode,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, viewModel.userHouseNumber, it, viewModel.userCity) },
+                    label = { Text("PLZ") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = viewModel.userCity,
+                    onValueChange = { viewModel.updateAddress(viewModel.userStreet, viewModel.userHouseNumber, viewModel.userZipCode, it) },
+                    label = { Text("Stadt") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "Adresse für GPS-Simulation", style = MaterialTheme.typography.labelLarge)
-                Spacer(modifier = Modifier.height(8.dp))
 
-                // Straße & Hausnummer
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = viewModel.userStreet.value,
-                        onValueChange = {
-                            viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
-                        },
-                        label = { Text("Straße") },
-                        modifier = Modifier.weight(0.7f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = viewModel.userHouseNumber.value,
-                        onValueChange = {
-                            viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
-                        },
-                        label = { Text("Nr.") },
-                        modifier = Modifier.weight(0.3f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // PLZ & Stadt
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = viewModel.userZipCode.value,
-                        onValueChange = {
-                            viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value)
-                        },
-                        label = { Text("PLZ") },
-                        modifier = Modifier.weight(0.4f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedTextField(
-                        value = viewModel.userCity.value,
-                        onValueChange = {
-                            viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it)
-                        },
-                        label = { Text("Stadt") },
-                        modifier = Modifier.weight(0.6f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                Button(
+                    onClick = { viewModel.detectLocationViaGps() },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Schließen")
-                    }
-                    Button(onClick = {
-                        viewModel.detectLocationViaGps()
-                        onDismiss()
-                    }) {
-                        Text("GPS Suche")
-                    }
+                    Text("Standort via GPS")
+                }
+
+                TextButton(onClick = onDismiss, modifier = Modifier.align(androidx.compose.ui.Alignment.End)) {
+                    Text("Schließen")
                 }
             }
         }

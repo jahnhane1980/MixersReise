@@ -1,51 +1,66 @@
 package com.deinname.mixersreise.viewmodel
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelDestination
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class MixerViewModel(private val travelDao: TravelDao) : ViewModel() {
+class MixerViewModel(
+    private val travelDao: TravelDao,
+    private val settingsManager: SettingsManager,
+    private val externalScope: CoroutineScope
+) : ViewModel() {
 
-    var totalHearts = mutableStateOf(0)
-    var isInteractionLocked = mutableStateOf(false)
-    var showHearts = mutableStateOf(false)
-    var activeTool = mutableStateOf(ToolType.HAND)
-    var speechText = mutableStateOf("")
-    var isSleeping = mutableStateOf(false)
-    var droolAlpha = mutableStateOf(0f)
+    var totalHearts by mutableStateOf(settingsManager.getHearts())
+        private set
 
-    // Aktueller Standort für die Herz-Zuordnung
-    var currentDestination = mutableStateOf("Berlin")
+    // Settings-Fields
+    var userName by mutableStateOf(settingsManager.getUserName() ?: "")
+        private set
+    var userStreet by mutableStateOf(settingsManager.getStreet() ?: "")
+        private set
+    var userHouseNumber by mutableStateOf(settingsManager.getHouseNumber() ?: "")
+        private set
+    var userZipCode by mutableStateOf(settingsManager.getZipCode() ?: "")
+        private set
+    var userCity by mutableStateOf(settingsManager.getCity() ?: "")
+        private set
 
-    val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
-
-    fun selectTool(tool: ToolType) {
-        activeTool.value = tool
+    fun updateUserName(newName: String) {
+        userName = newName
+        settingsManager.saveUserName(newName)
     }
 
-    fun petMixer() {
-        if (isInteractionLocked.value) return
+    fun updateAddress(street: String, houseNumber: String, zipCode: String, city: String) {
+        userStreet = street
+        userHouseNumber = houseNumber
+        userZipCode = zipCode
+        userCity = city
+        settingsManager.saveAddress(street, houseNumber, zipCode, city)
+    }
 
+    fun addHeart() {
+        totalHearts++
+        settingsManager.saveHearts(totalHearts)
+    }
+
+    fun detectLocationViaGps() {
+        // Mock-Implementation für den Dialog-Fehler
+    }
+
+    val destinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
+
+    fun addDestination(name: String, lat: Double, lon: Double) {
         viewModelScope.launch {
-            isInteractionLocked.value = true
-            showHearts.value = true
-
-            totalHearts.value += 1
-
-            // Datenbank-Update für die aktuelle Stadt
-            currentDestination.value.let { cityName ->
-                travelDao.addHeartsToCity(cityName, 1)
-            }
-
-            delay(4000)
-
-            showHearts.value = false
-            isInteractionLocked.value = false
+            travelDao.insert(TravelDestination(name = name, latitude = lat, longitude = lon))
         }
     }
 }
