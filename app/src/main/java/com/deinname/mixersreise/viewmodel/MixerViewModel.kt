@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.SettingsManager
-import com.deinname.mixersreise.viewmodel.ToolType
+import com.deinname.mixersreise.viewmodel.ToolType // R1.1 Quittung: Verifizierter Pfad
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -19,22 +19,32 @@ class MixerViewModel(
     // States
     val totalHearts = mutableStateOf(0)
     val isSleeping = mutableStateOf(false)
+    val droolAlpha = mutableStateOf(0f) // FIX: Für HomeScreen wiederhergestellt
     val speechText = mutableStateOf("")
     val activeTool = mutableStateOf(ToolType.HAND)
     val showHearts = mutableStateOf(false)
-    val isInteractionLocked = mutableStateOf(false) // R6: Neu für Cooldown
+    val isInteractionLocked = mutableStateOf(false)
 
-    // R1.1 Quittung: Verifizierte Funktion für Pet/Interaktion
+    val destinations = mutableStateListOf<String>()
+
+    // FIX: Für HomeScreen wiederhergestellt
+    fun selectTool(tool: ToolType) {
+        // R6: Tool-Wechsel nur erlauben, wenn gerade keine Interaktion läuft
+        if (!isInteractionLocked.value) {
+            activeTool.value = tool
+        }
+    }
+
+    // Zentrale Interaktions-Logik (4s Timer)
     fun petMixer() {
-        if (isInteractionLocked.value) return // Blockiert, wenn Timer läuft
+        if (isInteractionLocked.value) return
 
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
-            speechText.value = "Das fühlt sich gut an!"
+            speechText.value = "Huiii!"
 
-            // 4 Sekunden hängen bleiben
-            delay(4000)
+            delay(4000) // 4 Sekunden Verweildauer
 
             isInteractionLocked.value = false
             showHearts.value = false
@@ -42,5 +52,8 @@ class MixerViewModel(
         }
     }
 
-    // ... restliche Funktionen wie feedMixer etc. analog anpassen ...
+    // Weitere Stubs für die Konsistenz
+    fun feedMixer() { petMixer() } // Vorübergehend gleiche Logik
+    fun cleanMixer() { petMixer() }
+    fun talkToMixer() { petMixer() }
 }
