@@ -23,46 +23,52 @@ fun MapScreen(
     viewModel: MixerViewModel,
     onBack: () -> Unit
 ) {
-    // R1.1 Quittung: Box als Basis, um LemonChiffon zu garantieren
+    // Die Box garantiert den LemonChiffon Hintergrund, falls das Bild Transparenzen hat
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Bild
+        // LAYER 1: Das Hintergrundbild (R1.1 Quittung: bg_world_map fixiert)
         SafeImage(
-            resId = R.drawable.DEIN_DATEINAME, // Dein händischer Eintrag
+            resId = R.drawable.bg_world_map,
             contentDescription = "Weltkarte",
             modifier = Modifier.fillMaxSize()
         )
 
-        // LAYER 2: UI (Kein Scaffold, um jegliche Standard-Hintergründe zu vermeiden)
+        // LAYER 2: UI (Manuelle Anordnung statt Scaffold für 100% Transparenz-Kontrolle)
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // Eigene TopBar-Konstruktion ohne Scaffold-Zwang
+            // Custom TopBar Bereich
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(8.dp),
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Zurück", tint = Color.DarkGray)
+                IconButton(
+                    onClick = onBack,
+                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.White.copy(alpha = 0.5f))
+                ) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Zurück", tint = Color.Black)
                 }
+
+                Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
                     text = "Weltkarte",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color.DarkGray
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.Black
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // DIE HERZCHEN (Explizit gerahmt für Sichtbarkeit)
+                // HERZ-COUNTER (Gegen den weißen Hintergrund abgesichert)
                 Surface(
-                    color = Color.White.copy(alpha = 0.6f),
-                    shape = MaterialTheme.shapes.medium
+                    color = Color.White.copy(alpha = 0.8f),
+                    shape = MaterialTheme.shapes.medium,
+                    shadowElevation = 4.dp
                 ) {
                     Text(
                         text = " ❤️ ${viewModel.totalHearts.value} ",
@@ -73,30 +79,40 @@ fun MapScreen(
                 }
             }
 
-            // Die Liste der Ziele
+            // Inhalts-Bereich (Liste der Ziele)
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    Text(
-                        text = "Entdeckte Ziele",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.DarkGray
-                    )
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.1f),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = " Entdeckte Ziele ",
+                            modifier = Modifier.padding(4.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.DarkGray
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 items(viewModel.destinations) { destination ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.9f)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Text(
                             text = destination,
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(20.dp),
+                            style = MaterialTheme.typography.bodyLarge,
                             color = Color.Black
                         )
                     }
