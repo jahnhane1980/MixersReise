@@ -9,8 +9,9 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.lifecycleScope
 import com.deinname.mixersreise.data.AppDatabase
 import com.deinname.mixersreise.data.SettingsManager
+// R1.1 Quittung: Diese beiden Imports sind zwingend für die Navigation
 import com.deinname.mixersreise.ui.screens.HomeScreen
-import com.deinname.mixersreise.ui.screens.MapScreen // R1.1: Verifizierter Pfad
+import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
@@ -30,20 +31,21 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MixersReiseTheme {
+                // Navigation State
                 var currentScreen by remember { mutableStateOf("home") }
 
                 when (currentScreen) {
                     "home" -> HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            Log.d("MixerNav", "Navigation zur Map")
+                            Log.d("MixerNav", "Navigiere zu Map")
                             currentScreen = "map"
                         }
                     )
                     "map" -> MapScreen(
                         viewModel = viewModel,
                         onBack = {
-                            Log.d("MixerNav", "Zurück zu Home")
+                            Log.d("MixerNav", "Navigiere zu Home")
                             currentScreen = "home"
                         }
                     )
