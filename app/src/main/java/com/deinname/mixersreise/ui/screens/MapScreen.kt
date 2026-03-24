@@ -6,13 +6,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-// R1.1 Quittung: Explizite Imports für TopAppBar Komponenten
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
-@OptIn(ExperimentalMaterial3Api::class) // Notwendig für TopAppBar in M3
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     viewModel: MixerViewModel,
@@ -20,7 +19,6 @@ fun MapScreen(
 ) {
     Scaffold(
         topBar = {
-            // FIX: Verwendung der Standard TopAppBar mit korrektem Composable-Kontext
             TopAppBar(
                 title = { Text("Weltkarte") },
                 navigationIcon = {
@@ -51,9 +49,11 @@ fun MapScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // R6: Sicherer Zugriff auf die SnapshotStateList
             if (viewModel.destinations.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = androidx.compose.ui.Alignment.Center
+                ) {
                     Text(text = "Noch keine Reiseziele vorhanden.")
                 }
             } else {
