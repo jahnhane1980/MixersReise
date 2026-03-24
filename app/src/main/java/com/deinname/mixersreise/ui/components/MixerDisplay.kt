@@ -15,21 +15,21 @@ fun MixerDisplay(
     showHearts: Boolean,
     modifier: Modifier = Modifier
 ) {
-    // R6: Alignment von Center auf BottomCenter geändert und Padding für das untere Drittel hinzugefügt
+    // Root-Box für den Mixer-Bereich
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 80.dp), // Schiebt den Mixer vom untersten Rand etwas hoch ins untere Drittel
+            .padding(bottom = 80.dp), // Position im unteren Drittel
         contentAlignment = Alignment.BottomCenter
     ) {
-        // 1. Der Mixer (Basis)
+        // 1. Der Mixer (Basis-Bild)
         SafeImage(
             resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
             contentDescription = "Mixer",
-            modifier = Modifier.size(300.dp) // Größe bleibt gleich
+            modifier = Modifier.size(300.dp)
         )
 
-        // 2. Sabber-Overlay (nur wenn schläft)
+        // 2. Sabber-Overlay
         if (isSleeping) {
             SafeImage(
                 resId = R.drawable.overlay_drool,
@@ -39,12 +39,12 @@ fun MixerDisplay(
             )
         }
 
-        // 3. Sprechblase (Positioniert über dem Mixer)
+        // 3. Sprechblase (R6: Padding erhöht, um das Gesicht nicht zu verdecken)
         if (speechText.isNotEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 220.dp), // Sprechblase über dem Kopf
+                    .padding(bottom = 360.dp), // Von 220.dp auf 360.dp erhöht
                 contentAlignment = Alignment.BottomCenter
             ) {
                 MixerSpeechBubble(text = speechText)
