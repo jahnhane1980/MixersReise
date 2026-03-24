@@ -29,7 +29,7 @@ fun MixerDisplay(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // Der Haupt-Container für den Mixer mit dem gewünschten Offset nach unten
+        // Zentraler Container mit dem visuellen Versatz nach unten (120.dp)
         Box(
             modifier = Modifier
                 .offset(y = 120.dp)
@@ -37,7 +37,7 @@ fun MixerDisplay(
             contentAlignment = Alignment.Center
         ) {
 
-            // DIE MIXER-GRAFIK (Vordergrund)
+            // DIE MIXER-GRAFIK (mixer_idle)
             Image(
                 painter = painterResource(id = R.drawable.mixer_idle),
                 contentDescription = "Mixer",
@@ -49,13 +49,15 @@ fun MixerDisplay(
                     )
             )
 
-            // R7 & R1.1: WERKZEUG-LOGIK (Klebt am Mixer während der Interaktion)
-            // Nutzt die kleingeschriebenen Enums und korrekten Dateinamen
-            if (isInteractionLocked && activeTool != ToolType.None) {
+            // R7: WERKZEUG-LOGIK (Exakt nach deiner ToolType-Definition)
+            if (isInteractionLocked) {
                 val toolResId = when (activeTool) {
-                    ToolType.Brush -> R.drawable.tool_brush
-                    ToolType.Food -> R.drawable.tool_food
-                    ToolType.Clean -> R.drawable.tool_clean
+                    ToolType.FOOD -> R.drawable.tool_food
+                    //ToolType.CLEAN -> R.drawable.ic_tool_clean
+                    ToolType.SPONGE -> R.drawable.tool_sponge // Mapping falls gleiches Icon
+                    ToolType.COKE -> R.drawable.tool_coke  // Mapping falls gleiches Icon
+                    ToolType.HAND -> R.drawable.tool_hand
+                    ToolType.TALK -> R.drawable.tool_talk
                     else -> null
                 }
 
