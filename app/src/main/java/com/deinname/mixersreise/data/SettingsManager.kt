@@ -6,50 +6,23 @@ import android.content.SharedPreferences
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
 
-    companion object {
-        private const val KEY_TOTAL_HEARTS = "total_hearts"
-        private const val KEY_USER_NAME = "user_name"
-        private const val KEY_STREET = "address_street"
-        private const val KEY_HOUSE_NUMBER = "address_house_number"
-        private const val KEY_ZIP_CODE = "address_zip_code"
-        private const val KEY_CITY = "address_city"
-        private const val KEY_LATITUDE = "address_latitude"
-        private const val KEY_LONGITUDE = "address_longitude"
+    // Hearts
+    fun saveHearts(count: Int) = prefs.edit().putInt("hearts", count).apply()
+    fun getHearts(): Int = prefs.getInt("hearts", 0)
 
-        private const val DEFAULT_NAME = "Reisender"
-        private const val EMPTY_STRING = ""
-        private const val DEFAULT_COORD = 0f
-    }
+    // User Data
+    fun saveUserName(name: String) = prefs.edit().putString("user_name", name).apply()
+    fun getUserName(): String? = prefs.getString("user_name", null)
 
-    var totalHearts: Int
-        get() = prefs.getInt(KEY_TOTAL_HEARTS, 0)
-        set(value) = prefs.edit().putInt(KEY_TOTAL_HEARTS, value).apply()
+    fun saveStreet(value: String) = prefs.edit().putString("street", value).apply()
+    fun getStreet(): String? = prefs.getString("street", null)
 
-    var userName: String
-        get() = prefs.getString(KEY_USER_NAME, DEFAULT_NAME) ?: DEFAULT_NAME
-        set(value) = prefs.edit().putString(KEY_USER_NAME, value).apply()
+    fun saveHouseNumber(value: String) = prefs.edit().putString("house_no", value).apply()
+    fun getHouseNumber(): String? = prefs.getString("house_no", null)
 
-    var street: String
-        get() = prefs.getString(KEY_STREET, EMPTY_STRING) ?: EMPTY_STRING
-        set(value) = prefs.edit().putString(KEY_STREET, value).apply()
+    fun saveZipCode(value: String) = prefs.edit().putString("zip", value).apply()
+    fun getZipCode(): String? = prefs.getString("zip", null)
 
-    var houseNumber: String
-        get() = prefs.getString(KEY_HOUSE_NUMBER, EMPTY_STRING) ?: EMPTY_STRING
-        set(value) = prefs.edit().putString(KEY_HOUSE_NUMBER, value).apply()
-
-    var zipCode: String
-        get() = prefs.getString(KEY_ZIP_CODE, EMPTY_STRING) ?: EMPTY_STRING
-        set(value) = prefs.edit().putString(KEY_ZIP_CODE, value).apply()
-
-    var city: String
-        get() = prefs.getString(KEY_CITY, EMPTY_STRING) ?: EMPTY_STRING
-        set(value) = prefs.edit().putString(KEY_CITY, value).apply()
-
-    var latitude: Float
-        get() = prefs.getFloat(KEY_LATITUDE, DEFAULT_COORD)
-        set(value) = prefs.edit().putFloat(KEY_LATITUDE, value).apply()
-
-    var longitude: Float
-        get() = prefs.getFloat(KEY_LONGITUDE, DEFAULT_COORD)
-        set(value) = prefs.edit().putFloat(KEY_LONGITUDE, value).apply()
+    fun saveCity(value: String) = prefs.edit().putString("city", value).apply()
+    fun getCity(): String? = prefs.getString("city", null)
 }
