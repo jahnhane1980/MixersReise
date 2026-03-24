@@ -20,26 +20,26 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R5: Root-Box mit LemonChiffon als Basis-Hintergrund
+    // R5: Root-Box mit LemonChiffon statt Weiß als Basis
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LemonChiffon) // FIX: Hier wird Weiß durch LemonChiffon ersetzt
+            .background(LemonChiffon)
     ) {
-        // Hintergrundbild
+        // LAYER 1: Hintergrundbild
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Hintergrund Schlafzimmer",
             modifier = Modifier.fillMaxSize()
         )
 
-        // UI-Layer
+        // LAYER 2: UI (Scaffold)
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
-                    level = viewModel.level,
+                    // R2: 'level' entfernt, nur noch 'hearts' wird übergeben
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = { onOpenMap() },
                     onOpenSettings = { showSettings = true }
@@ -57,6 +57,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
+                // Zentrales Mixer Display
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
@@ -64,6 +65,7 @@ fun HomeScreen(
                     showHearts = false
                 )
 
+                // Dialog Overlays
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
