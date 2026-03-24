@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsManager = SettingsManager(applicationContext)
-        // Fix: getDatabase erwartet physisch nur context
+        // Fix: getDatabase akzeptiert physisch nur Context
         val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
@@ -37,13 +37,13 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(
                             viewModel = viewModel,
                             onOpenMap = { navController.navigate("map") },
-                            onNavigateToWorld = { navController.navigate("world") } // Hinzugefügt
+                            onNavigateToWorld = { navController.navigate("world") }
                         )
                     }
                     composable("map") {
                         MapScreen(
                             viewModel = viewModel,
-                            onBack = { navController.popBackStack() } // Hinzugefügt
+                            onBack = { navController.popBackStack() }
                         )
                     }
                     composable("world") {
