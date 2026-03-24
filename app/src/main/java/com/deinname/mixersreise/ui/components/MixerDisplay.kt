@@ -48,13 +48,12 @@ fun MixerDisplay(
                     )
             )
 
-            // R6: WERKZEUG-LOGIK (Das "festklebende" Icon)
-            // Wenn eine Interaktion läuft und ein Werkzeug gewählt ist, wird es hier angezeigt
-            if (isInteractionLocked && activeTool != ToolType.NONE) {
+            // R1.1 Quittung: Korrigierte Enum-Referenzen und Ressourcen-Namen
+            if (isInteractionLocked && activeTool != ToolType.None) {
                 val toolResId = when (activeTool) {
-                    ToolType.BRUSH -> R.drawable.ic_tool_brush
-                    ToolType.FEED -> R.drawable.ic_tool_feed
-                    ToolType.CLEAN -> R.drawable.ic_tool_clean
+                    ToolType.Brush -> R.drawable.tool_brush
+                    ToolType.Food -> R.drawable.tool_food
+                    ToolType.Clean -> R.drawable.tool_clean
                     else -> null
                 }
 
@@ -63,9 +62,8 @@ fun MixerDisplay(
                         painter = painterResource(id = resId),
                         contentDescription = "Aktives Werkzeug",
                         modifier = Modifier
-                            .size(60.dp)
-                            .offset(x = (-80).dp, y = 0.dp) // Klebt links am Mixer
-                            .animateContentSize()
+                            .size(70.dp)
+                            .offset(x = (-90).dp, y = 10.dp)
                     )
                 }
             }
