@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,11 +20,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsManager = SettingsManager(applicationContext)
-        // Fix: getDatabase akzeptiert physisch nur Context
         val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
-            MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
+            MixerViewModelFactory(database.travelDao(), settingsManager)
         }
 
         setContent {
