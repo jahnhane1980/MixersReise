@@ -20,8 +20,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val database = AppDatabase.getDatabase(this)
-        val settingsManager = SettingsManager(this)
+        val settingsManager = SettingsManager(applicationContext)
+        // AppDatabase.getDatabase erwartet physisch nur Context
+        val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
             MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
@@ -30,15 +31,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             MixersReiseTheme {
                 val navController = rememberNavController()
+
                 NavHost(navController = navController, startDestination = "home") {
                     composable("home") {
                         HomeScreen(
                             viewModel = viewModel,
-                            onOpenMap = { navController.navigate("map") }
+                            onOpenMap = { navController.navigate("map") },
+                            onNavigateToWorld = { navController.navigate("world") }
                         )
                     }
                     composable("map") {
-                        MapScreen(viewModel = viewModel)
+                        MapScreen(
+                            viewModel = viewModel,
+                            onBack = { navController.popBackStack() }
+                        )
                     }
                     composable("world") {
                         MixerWorldScreen(viewModel = viewModel)
