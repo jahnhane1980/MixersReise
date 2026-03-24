@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
@@ -23,23 +24,24 @@ fun MapScreen(
     viewModel: MixerViewModel,
     onBack: () -> Unit
 ) {
-    // Die Box garantiert den LemonChiffon Hintergrund, falls das Bild Transparenzen hat
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Das Hintergrundbild (R1.1 Quittung: bg_world_map fixiert)
+        // LAYER 1: Weltkarte (Mit ContentScale.Crop für volle Fläche)
+        // R1.1 Quittung: bg_world_map physisch vorhanden
         SafeImage(
             resId = R.drawable.bg_world_map,
             contentDescription = "Weltkarte",
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop // FIX: Zieht das Bild über den ganzen Bereich
         )
 
-        // LAYER 2: UI (Manuelle Anordnung statt Scaffold für 100% Transparenz-Kontrolle)
+        // LAYER 2: UI
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // Custom TopBar Bereich
+            // TopBar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -61,59 +63,55 @@ fun MapScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color.Black
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // HERZ-COUNTER (Gegen den weißen Hintergrund abgesichert)
-                Surface(
-                    color = Color.White.copy(alpha = 0.8f),
-                    shape = MaterialTheme.shapes.medium,
-                    shadowElevation = 4.dp
-                ) {
-                    Text(
-                        text = " ❤️ ${viewModel.totalHearts.value} ",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
-                    )
-                }
             }
 
-            // Inhalts-Bereich (Liste der Ziele)
-            LazyColumn(
+            // Tabelle (50% Weiß, ohne Header)
+            Card(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White.copy(alpha = 0.5f)
+                ),
+                shape = MaterialTheme.shapes.medium
             ) {
-                item {
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.1f),
-                        shape = MaterialTheme.shapes.small
-                    ) {
-                        Text(
-                            text = " Entdeckte Ziele ",
-                            modifier = Modifier.padding(4.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color.DarkGray
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // R6: Header-Zeile wurde wie gewünscht entfernt
 
-                items(viewModel.destinations) { destination ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.9f)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Text(
-                            text = destination,
-                            modifier = Modifier.padding(20.dp),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Black
+                    items(viewModel.destinations) { destination ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Spalte 1: Herzchen Symbol
+                            Text(
+                                text = "❤️",
+                                modifier = Modifier.width(40.dp)
+                            )
+
+                            // Spalte 2: Anzahl (Dummy 0)
+                            Text(
+                                text = "0",
+                                modifier = Modifier.width(60.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Black
+                            )
+
+                            // Spalte 3: Stadtname
+                            Text(
+                                text = destination,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.Black
+                            )
+                        }
+                        // Dezente Trennlinie zwischen den Städten
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = Color.Black.copy(alpha = 0.1f)
                         )
                     }
                 }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.*
 import com.deinname.mixersreise.ui.theme.LemonChiffon
@@ -18,29 +19,29 @@ fun HomeScreen(
     viewModel: MixerViewModel,
     onOpenMap: () -> Unit
 ) {
-    // Lokaler State für den Einstellungs-Dialog
     var showSettings by remember { mutableStateOf(false) }
 
-    // R1.1 & R5: Root-Container mit LemonChiffon (kein weißer Hintergrund mehr)
+    // R1.1 Quittung: LemonChiffon als Basis-Layer
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Hintergrundbild (Plushies)
+        // LAYER 1: Das Plüschtier-Hintergrundbild
+        // FIX: ContentScale.Crop sorgt dafür, dass es den gesamten Bereich ausfüllt
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Hintergrund Schlafzimmer",
-            modifier = Modifier.fillMaxSize()
+            contentDescription = "Schlafzimmer mit Kuscheltieren",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
 
-        // LAYER 2: UI Struktur (Scaffold für Bars)
+        // LAYER 2: UI-Elemente
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
+            containerColor = Color.Transparent, // Wichtig für die Sichtbarkeit des Bildes
             topBar = {
                 MixerTopBar(
-                    // R2: Nur Herzen, Level wurde entfernt
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = { onOpenMap() },
                     onOpenSettings = { showSettings = true }
@@ -49,7 +50,6 @@ fun HomeScreen(
             bottomBar = {
                 MixerToolBar(
                     activeTool = viewModel.activeTool.value,
-                    // R6: Verifizierter Aufruf von selectTool im ViewModel
                     onToolSelected = { viewModel.selectTool(it) }
                 )
             }
@@ -59,21 +59,17 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // R2 & R6: MixerDisplay mit allen synchronisierten Parametern
+                // Hier wird der Mixer und seine Interaktionen gerendert
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
-                    droolAlpha = viewModel.droolAlpha.value, // FIX: Wiederhergestellt
+                    droolAlpha = viewModel.droolAlpha.value,
                     speechText = viewModel.speechText.value,
                     showHearts = viewModel.showHearts.value,
                     isInteractionLocked = viewModel.isInteractionLocked.value,
                     activeTool = viewModel.activeTool.value,
-                    onMixerClick = {
-                        // Startet die 4-Sekunden Interaktions-Logik
-                        viewModel.petMixer()
-                    }
+                    onMixerClick = { viewModel.petMixer() }
                 )
 
-                // Overlay: Einstellungs-Dialog
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
