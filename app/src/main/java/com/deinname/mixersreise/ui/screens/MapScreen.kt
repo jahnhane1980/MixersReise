@@ -16,20 +16,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
+import com.deinname.mixersreise.data.TravelDestination
 import com.deinname.mixersreise.ui.components.SafeImage
 import com.deinname.mixersreise.ui.theme.LemonChiffon
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
 fun MapScreen(viewModel: MixerViewModel) {
-    val destinations by viewModel.allDestinations.collectAsState(initial = emptyList())
+    // Fix: Explizite Typangabe für TravelDestination zur Behebung des Inferenz-Fehlers
+    val destinations by viewModel.allDestinations.collectAsState(initial = emptyList<TravelDestination>())
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // Hintergrundbild der Weltkarte
         SafeImage(
             resId = R.drawable.bg_world_map,
             contentDescription = "Weltkarte Hintergrund",
@@ -37,7 +38,6 @@ fun MapScreen(viewModel: MixerViewModel) {
             contentScale = ContentScale.Crop
         )
 
-        // Die Reise-Tabelle
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -46,7 +46,6 @@ fun MapScreen(viewModel: MixerViewModel) {
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Tabelle-Container (50% Weiß-Transparenz laut Regel)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -61,22 +60,15 @@ fun MapScreen(viewModel: MixerViewModel) {
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Herzen-Icon (Platzhalter für echtes Asset oder Text-Emoji)
                             Text(text = "❤️", fontSize = 18.sp)
-
                             Spacer(modifier = Modifier.width(8.dp))
-
-                            // ECHTE HERZ-ANZAHL AUS DER DB
                             Text(
                                 text = "${destination.heartsCollected}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = Color.Black
                             )
-
                             Spacer(modifier = Modifier.width(16.dp))
-
-                            // STADTNAME
                             Text(
                                 text = destination.cityName,
                                 fontSize = 18.sp,

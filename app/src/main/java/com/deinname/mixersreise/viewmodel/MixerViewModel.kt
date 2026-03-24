@@ -9,7 +9,6 @@ import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelDestination
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -19,10 +18,19 @@ class MixerViewModel(
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
+    // UI States für Mixer-Interaktion
+    var speechText by mutableStateOf("")
+    var droolAlpha by mutableFloatOf(0f)
+    var isSleeping by mutableStateOf(false)
+    var showHearts by mutableStateOf(false)
+    var isInteractionLocked by mutableStateOf(false)
+    var activeTool by mutableStateOf<ToolType?>(null)
+
+    // Stats
     var totalHearts by mutableStateOf(settingsManager.getHearts())
         private set
 
-    // Settings-Fields
+    // User Settings
     var userName by mutableStateOf(settingsManager.getUserName() ?: "")
         private set
     var userStreet by mutableStateOf(settingsManager.getStreet() ?: "")
@@ -33,6 +41,17 @@ class MixerViewModel(
         private set
     var userCity by mutableStateOf(settingsManager.getCity() ?: "")
         private set
+
+    // Datenbank Flows (Synchronisation mit MapScreen)
+    val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
+
+    fun selectTool(tool: ToolType?) {
+        activeTool = tool
+    }
+
+    fun petMixer() {
+        // Logik wird im InteractionHandler ausgeführt, hier nur als Trigger falls nötig
+    }
 
     fun updateUserName(newName: String) {
         userName = newName
@@ -52,15 +71,12 @@ class MixerViewModel(
         settingsManager.saveHearts(totalHearts)
     }
 
-    fun detectLocationViaGps() {
-        // Mock-Implementation für den Dialog-Fehler
-    }
+    fun detectLocationViaGps() { /* Mock */ }
 
-    val destinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
-
-    fun addDestination(name: String, lat: Double, lon: Double) {
+    fun addDestination(cityName: String, lat: Double, lon: Double) {
         viewModelScope.launch {
-            travelDao.insert(TravelDestination(name = name, latitude = lat, longitude = lon))
+            // Prüfung der TravelDestination Parameter (cityName, latitude, longitude)
+            travelDao.insert(TravelDestination(cityName = cityName, latitude = lat, longitude = lon, heartsCollected = 0))
         }
     }
 }

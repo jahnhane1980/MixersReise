@@ -17,18 +17,16 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 @Composable
 fun HomeScreen(
     viewModel: MixerViewModel,
-    onOpenMap: () -> Unit
+    onOpenMap: () -> Unit,
+    onNavigateToWorld: () -> Unit // Synchronisation mit NavHost Fehlermeldung
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R1.1 Quittung: LemonChiffon als Basis-Layer
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Das Plüschtier-Hintergrundbild
-        // FIX: ContentScale.Crop sorgt dafür, dass es den gesamten Bereich ausfüllt
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
             contentDescription = "Schlafzimmer mit Kuscheltieren",
@@ -36,12 +34,12 @@ fun HomeScreen(
             contentScale = ContentScale.Crop
         )
 
-        // LAYER 2: UI-Elemente
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent, // Wichtig für die Sichtbarkeit des Bildes
+            containerColor = Color.Transparent,
             topBar = {
                 MixerTopBar(
+                    // Physischer Check: MixerViewModel.totalHearts ist MutableState<Int>
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = { onOpenMap() },
                     onOpenSettings = { showSettings = true }
@@ -49,6 +47,7 @@ fun HomeScreen(
             },
             bottomBar = {
                 MixerToolBar(
+                    // Physischer Check: activeTool ist MutableState<ToolType>
                     activeTool = viewModel.activeTool.value,
                     onToolSelected = { viewModel.selectTool(it) }
                 )
@@ -59,7 +58,6 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // Hier wird der Mixer und seine Interaktionen gerendert
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
