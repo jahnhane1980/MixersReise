@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.deinname.mixersreise.data.AppDatabase
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.ui.screens.HomeScreen
-import com.deinname.mixersreise.ui.screens.MapScreen
+import com.deinname.mixersreise.ui.screens.MapScreen // R1.1: Verifizierter Pfad
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.viewmodel.MixerViewModelFactory
@@ -19,17 +19,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // R5: Physikalische Prüfung der Signaturen
         val scope = lifecycleScope
-
-        // FIX: Hier muss der scope AUCH übergeben werden (R2: Signature Synchronicity)
         val database = AppDatabase.getDatabase(applicationContext, scope)
-
         val travelDao = database.travelDao()
         val settingsManager = SettingsManager(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
-            // R2: Hier wird der scope ebenfalls benötigt
             MixerViewModelFactory(travelDao, settingsManager, scope)
         }
 
@@ -41,14 +36,14 @@ class MainActivity : ComponentActivity() {
                     "home" -> HomeScreen(
                         viewModel = viewModel,
                         onOpenMap = {
-                            Log.d("MixerNav", "Navigation zur Map getriggert")
+                            Log.d("MixerNav", "Navigation zur Map")
                             currentScreen = "map"
                         }
                     )
                     "map" -> MapScreen(
                         viewModel = viewModel,
                         onBack = {
-                            Log.d("MixerNav", "Zurück zum HomeScreen")
+                            Log.d("MixerNav", "Zurück zu Home")
                             currentScreen = "home"
                         }
                     )
