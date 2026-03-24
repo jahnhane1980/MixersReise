@@ -11,12 +11,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
+// Korrektur: Signatur an MixerViewModelFactory angepasst
 class MixerViewModel(
     private val travelDao: TravelDao,
     private val settingsManager: SettingsManager,
     private val externalScope: CoroutineScope
 ) : ViewModel() {
 
+    // Initialisierung mit Werten aus dem SettingsManager
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
@@ -25,7 +27,7 @@ class MixerViewModel(
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
 
-    // States für UI (SettingsDialog)
+    // States für SettingsDialog
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
@@ -41,13 +43,11 @@ class MixerViewModel(
         settingsManager.saveUserName(name)
     }
 
-    // Korrektur: Nutzt nun die verifizierten Methoden aus SettingsManager
     fun updateAddress(street: String, house: String, zip: String, city: String) {
         userStreet.value = street
         userHouseNumber.value = house
         userZipCode.value = zip
         userCity.value = city
-
         settingsManager.saveStreet(street)
         settingsManager.saveHouseNumber(house)
         settingsManager.saveZipCode(zip)
@@ -55,7 +55,7 @@ class MixerViewModel(
     }
 
     fun detectLocationViaGps() {
-        // Logik für GPS-Suche
+        // Logik für GPS
     }
 
     fun selectTool(tool: ToolType) {
@@ -64,13 +64,20 @@ class MixerViewModel(
 
     fun petMixer() {
         if (isInteractionLocked.value) return
+
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
+
             totalHearts.value += 1
             settingsManager.saveHearts(totalHearts.value)
-            currentDestination.value.let { travelDao.addHeartsToCity(it, 1) }
+
+            currentDestination.value.let { cityName ->
+                travelDao.addHeartsToCity(cityName, 1)
+            }
+
             delay(4000)
+
             showHearts.value = false
             isInteractionLocked.value = false
         }
