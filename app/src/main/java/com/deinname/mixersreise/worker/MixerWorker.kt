@@ -5,20 +5,16 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.deinname.mixersreise.data.SettingsManager
 
-class MixerWorker(
-    context: Context,
-    workerParams: WorkerParameters
-) : Worker(context, workerParams) {
-
-    private val settingsManager = SettingsManager(context)
+class MixerWorker(context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        // Beispiel-Logik: Mixer bekommt im Hintergrund Hunger/Sabber
-        // Wir nutzen hier direkt die totalHearts Variable des SettingsManagers
-        val currentHearts = settingsManager.totalHearts
+        val settingsManager = SettingsManager(applicationContext)
 
-        // Hier könnte später die Logik rein: Wenn 1 Stunde vergangen, Herzen -5
-        // settingsManager.totalHearts = (currentHearts - 5).coerceAtLeast(0)
+        // R6: Logik für Hintergrund-Updates (z.B. Hunger oder Bonus-Herzen)
+        val currentHearts = settingsManager.getHearts()
+
+        // Beispiel: Ein kleiner Bonus, wenn die App im Hintergrund läuft
+        settingsManager.saveHearts(currentHearts + 1)
 
         return Result.success()
     }

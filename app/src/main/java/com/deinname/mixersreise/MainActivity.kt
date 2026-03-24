@@ -4,8 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.deinname.mixersreise.data.AppDatabase
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.ui.screens.HomeScreen
@@ -27,18 +30,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MixersReiseTheme {
-                // R6: Stabiles State-basiertes Navigations-System ohne externe Library
-                var currentScreen by remember { mutableStateOf("home") }
+                val navController = rememberNavController()
 
-                when (currentScreen) {
-                    "home" -> HomeScreen(
-                        viewModel = viewModel,
-                        onOpenMap = { currentScreen = "map" }
-                    )
-                    "map" -> MapScreen(
-                        viewModel = viewModel,
-                        onBack = { currentScreen = "home" }
-                    )
+                // R6: Formale Jetpack Navigation Implementation
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") {
+                        HomeScreen(
+                            viewModel = viewModel,
+                            onOpenMap = { navController.navigate("map") }
+                        )
+                    }
+                    composable("map") {
+                        MapScreen(
+                            viewModel = viewModel,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
                 }
             }
         }
