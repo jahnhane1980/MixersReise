@@ -21,10 +21,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val settingsManager = SettingsManager(applicationContext)
-        // Fix: getDatabase erwartet physisch nur Context
         val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
+            // Übergabe aller drei Parameter an die korrigierte Factory
             MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
         }
 
@@ -36,18 +36,11 @@ class MainActivity : ComponentActivity() {
                     composable("home") {
                         HomeScreen(
                             viewModel = viewModel,
-                            onOpenMap = { navController.navigate("map") },
-                            onNavigateToWorld = { navController.navigate("world") }
+                            onOpenMap = { navController.navigate("map") }
                         )
                     }
                     composable("map") {
-                        MapScreen(
-                            viewModel = viewModel,
-                            onBack = { navController.popBackStack() }
-                        )
-                    }
-                    composable("world") {
-                        MixerWorldScreen(viewModel = viewModel)
+                        MapScreen(viewModel = viewModel)
                     }
                 }
             }
