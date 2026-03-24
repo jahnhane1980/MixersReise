@@ -18,7 +18,7 @@ import com.deinname.mixersreise.viewmodel.MixerViewModel
 fun HomeScreen(
     viewModel: MixerViewModel,
     onOpenMap: () -> Unit,
-    onNavigateToWorld: () -> Unit // Signatur-Synchronität mit MainActivity
+    onNavigateToWorld: () -> Unit // Synchronisation mit MainActivity
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
@@ -29,7 +29,7 @@ fun HomeScreen(
     ) {
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Schlafzimmer",
+            contentDescription = "Schlafzimmer Hintergrund",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )

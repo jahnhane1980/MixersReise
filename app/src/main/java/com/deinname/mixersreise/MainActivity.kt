@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
-            // Übergabe aller drei Parameter an die korrigierte Factory
+            // R2: Signatur-Synchronität mit MixerViewModelFactory (3 Parameter)
             MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
         }
 
@@ -36,11 +36,18 @@ class MainActivity : ComponentActivity() {
                     composable("home") {
                         HomeScreen(
                             viewModel = viewModel,
-                            onOpenMap = { navController.navigate("map") }
+                            onOpenMap = { navController.navigate("map") },
+                            onNavigateToWorld = { navController.navigate("world") }
                         )
                     }
                     composable("map") {
-                        MapScreen(viewModel = viewModel)
+                        MapScreen(
+                            viewModel = viewModel,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                    composable("world") {
+                        MixerWorldScreen(viewModel = viewModel)
                     }
                 }
             }
