@@ -21,19 +21,18 @@ fun MapScreen(
     viewModel: MixerViewModel,
     onBack: () -> Unit
 ) {
-    // Box ist der Container, der das Layering erlaubt (Bild ganz unten, UI drüber)
     Box(modifier = Modifier.fillMaxSize()) {
 
         // 1. Hintergrund-Layer
         SafeImage(
-            resId = R.drawable.bg_world_map, // Hier händisch deinen Namen eintragen
+            resId = R.drawable.DEIN_DATEINAME, // Hier händisch deinen Namen eintragen
             contentDescription = "Weltkarte Hintergrund",
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. UI-Layer (Scaffold muss transparent sein!)
+        // 2. UI-Layer
         Scaffold(
-            containerColor = Color.Transparent, // KRITISCH: Ohne dies ist alles weiß/grau
+            containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = {
@@ -45,8 +44,10 @@ fun MapScreen(
                                 text = "Weltkarte",
                                 color = Color.White
                             )
-                            Spacer(modifier = Modifier.weight(1).width(16.dp))
-                            // HERZ-ANZEIGE: Explizit mit Kontrastfarbe
+                            // FIX: .weight(1f) statt .weight(1)
+                            Spacer(modifier = Modifier.weight(1f).width(16.dp))
+
+                            // HERZ-ANZEIGE
                             Surface(
                                 color = Color.Black.copy(alpha = 0.4f),
                                 shape = MaterialTheme.shapes.small
@@ -70,7 +71,6 @@ fun MapScreen(
                             )
                         }
                     },
-                    // Dunkle TopBar für bessere Lesbarkeit über der Karte
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Black.copy(alpha = 0.6f),
                         titleContentColor = Color.White
@@ -84,7 +84,6 @@ fun MapScreen(
                     .padding(innerPadding)
                     .padding(16.dp)
             ) {
-                // Titel über der Liste
                 Surface(
                     color = Color.Black.copy(alpha = 0.3f),
                     shape = MaterialTheme.shapes.medium
@@ -111,7 +110,7 @@ fun MapScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color.White.copy(alpha = 0.85f) // Leicht transparent
+                                    containerColor = Color.White.copy(alpha = 0.85f)
                                 )
                             ) {
                                 Text(
