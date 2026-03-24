@@ -25,7 +25,7 @@ fun MapScreen(
 
         // 1. Hintergrund-Layer
         SafeImage(
-            resId = R.drawable.DEIN_DATEINAME, // Hier händisch deinen Namen eintragen
+            resId = R.drawable.bg_world_map, // Hier händisch deinen Namen eintragen
             contentDescription = "Weltkarte Hintergrund",
             modifier = Modifier.fillMaxSize()
         )
