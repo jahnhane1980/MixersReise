@@ -1,8 +1,10 @@
 package com.deinname.mixersreise
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -20,12 +22,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Berechtigungs-Anfrage für GPS
+        val locationPermissionRequest = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            when {
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {}
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {}
+            }
+        }
+
+        locationPermissionRequest.launch(arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ))
+
         val settingsManager = SettingsManager(applicationContext)
         val database = AppDatabase.getDatabase(applicationContext)
 
         val viewModel: MixerViewModel by viewModels {
-            // R2: Signatur-Synchronität mit MixerViewModelFactory (3 Parameter)
-            MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope)
+            // Synchronisation: Context wird für GPS nun mit übergeben
+            MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope, applicationContext)
         }
 
         setContent {

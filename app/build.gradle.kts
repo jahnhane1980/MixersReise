@@ -79,6 +79,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
 
+// --- DER ABSOLUT EINZIGE ZUSATZ FÜR GPS ---
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+
     // --- Reise & Location ---
     implementation(libs.androidx.work.ktx)
     // Location Services für die Multiplikator-Berechnung
