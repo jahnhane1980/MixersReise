@@ -1,5 +1,6 @@
 package com.deinname.mixersreise.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
+import com.deinname.mixersreise.ui.theme.LemonChiffon
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,106 +23,82 @@ fun MapScreen(
     viewModel: MixerViewModel,
     onBack: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        // 1. Hintergrund-Layer
+    // R1.1 Quittung: Box als Basis, um LemonChiffon zu garantieren
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LemonChiffon)
+    ) {
+        // LAYER 1: Bild
         SafeImage(
-            resId = R.drawable.bg_world_map, // Hier händisch deinen Namen eintragen
-            contentDescription = "Weltkarte Hintergrund",
+            resId = R.drawable.DEIN_DATEINAME, // Dein händischer Eintrag
+            contentDescription = "Weltkarte",
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. UI-Layer
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Weltkarte",
-                                color = Color.White
-                            )
-                            // FIX: .weight(1f) statt .weight(1)
-                            Spacer(modifier = Modifier.weight(1f).width(16.dp))
+        // LAYER 2: UI (Kein Scaffold, um jegliche Standard-Hintergründe zu vermeiden)
+        Column(modifier = Modifier.fillMaxSize()) {
 
-                            // HERZ-ANZEIGE
-                            Surface(
-                                color = Color.Black.copy(alpha = 0.4f),
-                                shape = MaterialTheme.shapes.small
-                            ) {
-                                Text(
-                                    text = " ❤️ ${viewModel.totalHearts.value} ",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Zurück",
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Black.copy(alpha = 0.6f),
-                        titleContentColor = Color.White
-                    )
-                )
-            }
-        ) { innerPadding ->
-            Column(
+            // Eigene TopBar-Konstruktion ohne Scaffold-Zwang
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Zurück", tint = Color.DarkGray)
+                }
+
+                Text(
+                    text = "Weltkarte",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.DarkGray
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // DIE HERZCHEN (Explizit gerahmt für Sichtbarkeit)
                 Surface(
-                    color = Color.Black.copy(alpha = 0.3f),
+                    color = Color.White.copy(alpha = 0.6f),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
-                        text = " Entdeckte Ziele ",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White,
-                        modifier = Modifier.padding(8.dp)
+                        text = " ❤️ ${viewModel.totalHearts.value} ",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Black
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            // Die Liste der Ziele
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    Text(
+                        text = "Entdeckte Ziele",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.DarkGray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                if (viewModel.destinations.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = "Noch keine Reiseziele vorhanden.", color = Color.White)
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                items(viewModel.destinations) { destination ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f))
                     ) {
-                        items(viewModel.destinations) { destination ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color.White.copy(alpha = 0.85f)
-                                )
-                            ) {
-                                Text(
-                                    text = destination,
-                                    modifier = Modifier.padding(16.dp),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.Black
-                                )
-                            }
-                        }
+                        Text(
+                            text = destination,
+                            modifier = Modifier.padding(16.dp),
+                            color = Color.Black
+                        )
                     }
                 }
             }
