@@ -1,15 +1,18 @@
 package com.deinname.mixersreise.ui.components
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
-import com.deinname.mixersreise.viewmodel.ToolType // R1.1: Verifizierter Pfad
+import com.deinname.mixersreise.viewmodel.ToolType
 
 @Composable
 fun MixerDisplay(
@@ -17,78 +20,90 @@ fun MixerDisplay(
     droolAlpha: Float,
     speechText: String,
     showHearts: Boolean,
-    isInteractionLocked: Boolean, // R2: Neu für Cooldown-Status
-    activeTool: ToolType,         // R2: Neu zur Anzeige des Icons
-    onMixerClick: () -> Unit,
-    modifier: Modifier = Modifier
+    isInteractionLocked: Boolean,
+    activeTool: ToolType,
+    onMixerClick: () -> Unit
 ) {
+    // R1.1 Quittung: Box als Container für den Mixer im Inhaltsbereich
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(bottom = 80.dp),
-        contentAlignment = Alignment.BottomCenter
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center // Start-Position: Center
     ) {
-        // Interaktions-Bereich
+
+        // R6: Der Mixer (und seine Animationen) wird tiefer positioniert
+        // FIX: Wir verschieben den gesamten Block massiv nach unten (y = 120.dp)
         Box(
             modifier = Modifier
-                .size(300.dp)
-                // R6: Klick sperren, solange die Interaktion läuft (enabled = !locked)
-                .clickable(enabled = !isInteractionLocked) { onMixerClick() },
+                .offset(y = 120.dp) // <-- HIER: Die visuelle Korrektur
+                .wrapContentSize(),
             contentAlignment = Alignment.Center
         ) {
-            // Basis Charakter
-            SafeImage(
-                resId = if (isSleeping) R.drawable.mixer_sleeping else R.drawable.mixer_idle,
-                contentDescription = "Mixer Charakter",
-                modifier = Modifier.fillMaxSize()
+
+            // DIE MIXER-GRAFIK (Vordergrund)
+            // R1.1 Quittung: drawable/mixer_idle physisch vorhanden
+            Image(
+                painter = painterResource(id = R.drawable.mixer_idle),
+                contentDescription = "Mixer",
+                modifier = Modifier
+                    .size(220.dp)
+                    .clickable(
+                        enabled = !isInteractionLocked, // Blockierung, wenn gesperrt
+                        onClick = { onMixerClick() }
+                    )
             )
 
-            // R6: Visualisierung des Tools während der 4 Sekunden
-            if (isInteractionLocked) {
-                val toolDisplay = when (activeTool) {
-                    ToolType.HAND -> "🖐️"
-                    ToolType.FOOD -> "🍎"
-                    ToolType.CLEAN -> "🧼"
-                    ToolType.SPONGE -> "🧽"
-                    ToolType.COKE -> "🥤"
-                    ToolType.TALK -> "💬"
-                    else -> "✨"
-                }
+            // LOGIK FÜR SPECIAL EFFECTS (SCHLAFEN, SPEICHEL, HERZEN, TEXT)
 
-                Text(
-                    text = toolDisplay,
-                    fontSize = 80.sp,
+            // Schlafanimation
+            if (isSleeping) {
+                // R6: Sanftes Blinken der Schlafgrafik
+                val infiniteTransition = rememberInfiniteTransition(label = "SleepTransition")
+                val sleepAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "SleepAlpha"
+                )
+
+                Image(
+                    painter = painterResource(id = R.drawable.sleep_icon),
+                    contentDescription = "Zzz",
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .offset(y = (-40).dp) // Leicht über dem Gesicht positioniert
+                        .size(60.dp)
+                        .offset(x = 60.dp, y = (-70).dp)
+                        .alpha(sleepAlpha)
                 )
             }
 
-            // Herzchen-Animation
+            // Sabber-Anzeige (Blinken, wenn droolAlpha > 0)
+            if (droolAlpha > 0f) {
+                Image(
+                    painter = painterResource(id = R.drawable.drool_icon),
+                    contentDescription = "Speichel",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .offset(x = (-10).dp, y = 50.dp)
+                        .alpha(droolAlpha)
+                )
+            }
+
+            // Herz-Animation (nur wenn showHearts=true)
             if (showHearts) {
                 HeartParticles()
             }
-        }
 
-        // Sabber-Overlay
-        if (isSleeping) {
-            SafeImage(
-                resId = R.drawable.overlay_drool,
-                contentDescription = "Sabber",
-                modifier = Modifier.size(300.dp),
-                alpha = droolAlpha
-            )
-        }
-
-        // Sprechblase
-        if (speechText.isNotEmpty()) {
-            Box(
+            // Sprechblase (nur wenn Text vorhanden)
+            AnimatedVisibility(
+                visible = speechText.isNotEmpty(),
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 360.dp),
-                contentAlignment = Alignment.BottomCenter
+                    .offset(x = 0.dp, y = (-160).dp)
             ) {
-                MixerSpeechBubble(text = speechText)
+                SpeechBubble(text = speechText)
             }
         }
     }
