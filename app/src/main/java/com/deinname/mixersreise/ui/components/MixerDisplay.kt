@@ -13,6 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.ToolType
+// R1.1 Quittung: Import der korrekt benannten Komponente
+import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 
 @Composable
 fun MixerDisplay(
@@ -24,39 +26,31 @@ fun MixerDisplay(
     activeTool: ToolType,
     onMixerClick: () -> Unit
 ) {
-    // R1.1 Quittung: Box als Container für den Mixer im Inhaltsbereich
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center // Start-Position: Center
+        contentAlignment = Alignment.Center
     ) {
-
-        // R6: Der Mixer (und seine Animationen) wird tiefer positioniert
-        // FIX: Wir verschieben den gesamten Block massiv nach unten (y = 120.dp)
         Box(
             modifier = Modifier
-                .offset(y = 120.dp) // <-- HIER: Die visuelle Korrektur
+                .offset(y = 120.dp) // Beibehalten des gewünschten Offsets nach unten
                 .wrapContentSize(),
             contentAlignment = Alignment.Center
         ) {
 
             // DIE MIXER-GRAFIK (Vordergrund)
-            // R1.1 Quittung: drawable/mixer_idle physisch vorhanden
             Image(
                 painter = painterResource(id = R.drawable.mixer_idle),
                 contentDescription = "Mixer",
                 modifier = Modifier
                     .size(220.dp)
                     .clickable(
-                        enabled = !isInteractionLocked, // Blockierung, wenn gesperrt
+                        enabled = !isInteractionLocked,
                         onClick = { onMixerClick() }
                     )
             )
 
-            // LOGIK FÜR SPECIAL EFFECTS (SCHLAFEN, SPEICHEL, HERZEN, TEXT)
-
             // Schlafanimation
             if (isSleeping) {
-                // R6: Sanftes Blinken der Schlafgrafik
                 val infiniteTransition = rememberInfiniteTransition(label = "SleepTransition")
                 val sleepAlpha by infiniteTransition.animateFloat(
                     initialValue = 0f,
@@ -68,8 +62,9 @@ fun MixerDisplay(
                     label = "SleepAlpha"
                 )
 
+                // R1.1 Quittung: Korrigierter Name mixer_sleeping
                 Image(
-                    painter = painterResource(id = R.drawable.sleep_icon),
+                    painter = painterResource(id = R.drawable.mixer_sleeping),
                     contentDescription = "Zzz",
                     modifier = Modifier
                         .size(60.dp)
@@ -78,10 +73,11 @@ fun MixerDisplay(
                 )
             }
 
-            // Sabber-Anzeige (Blinken, wenn droolAlpha > 0)
+            // Sabber-Anzeige
             if (droolAlpha > 0f) {
+                // R1.1 Quittung: Korrigierter Name overlay_drool
                 Image(
-                    painter = painterResource(id = R.drawable.drool_icon),
+                    painter = painterResource(id = R.drawable.overlay_drool),
                     contentDescription = "Speichel",
                     modifier = Modifier
                         .size(40.dp)
@@ -90,12 +86,11 @@ fun MixerDisplay(
                 )
             }
 
-            // Herz-Animation (nur wenn showHearts=true)
             if (showHearts) {
                 HeartParticles()
             }
 
-            // Sprechblase (nur wenn Text vorhanden)
+            // Sprechblase
             AnimatedVisibility(
                 visible = speechText.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),
@@ -103,7 +98,8 @@ fun MixerDisplay(
                 modifier = Modifier
                     .offset(x = 0.dp, y = (-160).dp)
             ) {
-                SpeechBubble(text = speechText)
+                // R1.1 Quittung: Verwendung von MixerSpeechBubble
+                MixerSpeechBubble(text = speechText)
             }
         }
     }
