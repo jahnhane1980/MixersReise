@@ -20,20 +20,18 @@ fun HomeScreen(
 ) {
     var showSettings by remember { mutableStateOf(false) }
 
-    // R1.1 & R5: Root-Container mit LemonChiffon Hintergrund
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(LemonChiffon)
     ) {
-        // LAYER 1: Hintergrundbild
+        // Hintergrund
         SafeImage(
             resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Hintergrund Schlafzimmer",
+            contentDescription = "Hintergrund",
             modifier = Modifier.fillMaxSize()
         )
 
-        // LAYER 2: UI Struktur
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             containerColor = Color.Transparent,
@@ -56,19 +54,20 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                // R2: MixerDisplay Aufruf synchronisiert mit neuem Click-Handler
+                // R2 & R6: Synchronisierter Aufruf mit allen Interaktions-States
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
                     speechText = viewModel.speechText.value,
                     showHearts = viewModel.showHearts.value,
+                    isInteractionLocked = viewModel.isInteractionLocked.value,
+                    activeTool = viewModel.activeTool.value,
                     onMixerClick = {
-                        // Verknüpfung mit der Interaktions-Logik
+                        // Wir rufen petMixer auf, das die 4s Logik steuert
                         viewModel.petMixer()
                     }
                 )
 
-                // Overlay Dialoge
                 if (showSettings) {
                     SettingsDialog(
                         onDismiss = { showSettings = false },
