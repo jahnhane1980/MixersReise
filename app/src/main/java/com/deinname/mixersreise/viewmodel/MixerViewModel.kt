@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.Locale
+import kotlinx.coroutines.withContext
 
 class MixerViewModel(
     private val travelDao: TravelDao,
@@ -51,14 +52,28 @@ class MixerViewModel(
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
+    
     init {
-        if (settingsManager.getCity().isNullOrBlank()) {
-            detectLocationViaGps()
-        } else {
-            speechText.value = "Willkommen zurück!"
+        viewModelScope.launch {
+            // 1. Summe aus DB holen (auf Background-Thread)
+            val dbSum = withContext(Dispatchers.IO) {
+                travelDao.getTotalHeartsSum() ?: 0
+            }
+
+            // 2. State & Settings mit DB-Wahrheit abgleichen
+            settingsManager.saveHearts(dbSum)
+            totalHearts.value = dbSum
+
+            // 3. Deine bestehende GPS-Logik
+            if (settingsManager.getCity().isNullOrBlank()) {
+                detectLocationViaGps()
+            } else {
+                speechText.value = "Willkommen zurück!"
+            }
         }
     }
 
+// ... (Alle anderen Methoden bleiben 1:1 wie in deinem lokalen File)
     // --- UI & INTERACTION METHODS ---
 
     fun selectTool(tool: ToolType?) {
