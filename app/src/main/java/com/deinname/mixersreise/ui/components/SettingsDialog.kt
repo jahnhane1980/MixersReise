@@ -71,7 +71,6 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = viewModel.userStreet.value,
                         onValueChange = {
-                            // Korrektur: Aufruf von 'updateAddress' statt 'updateAddressState'
                             viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
                         },
                         label = { Text("Straße") },
@@ -117,17 +116,13 @@ fun SettingsDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // GPS Button
+                // GPS Button - Layout vereinheitlicht (Standard-Farben)
                 Button(
                     onClick = {
                         viewModel.detectLocationViaGps()
                         Toast.makeText(context, "GPS wird abgefragt...", Toast.LENGTH_SHORT).show()
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Aktuellen Standort abrufen")
                 }

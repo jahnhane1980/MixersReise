@@ -50,25 +50,32 @@ class MixerViewModel(
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
-        val savedName = settingsManager.getUserName() ?: ""
-        speechText.value = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
-
-        // Initialisierung: Summe aus der DB laden (Physical Check: Methode existiert in DAO)
-        viewModelScope.launch(Dispatchers.IO) {
-            val dbTotal = travelDao.getTotalHeartsSum() ?: 0
-            launch(Dispatchers.Main) {
-                totalHearts.value = dbTotal
-            }
+        // Initial-Check: Standardwerte setzen falls leer
+        if (userName.value.isBlank()) {
+            userName.value = "Entdecker"
+            settingsManager.saveUserName("Entdecker")
         }
 
+        val savedName = userName.value
+        speechText.value = "Hallo $savedName!"
+
         viewModelScope.launch {
+            // Falls keine Heimatstadt gesetzt ist, sofortige GPS-Ermittlung
+            if (userCity.value.isBlank()) {
+                detectLocationViaGps()
+            }
+
+            // Sicherheits-Timer: Sprechblase leeren
             launch { delay(15000); speechText.value = "" }
 
             try {
                 delay(2500)
                 fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                     .addOnSuccessListener { location ->
-                        if (location == null) return@addOnSuccessListener
+                        if (location == null) {
+                            speechText.value = "Diagnose: GPS-Location ist NULL"
+                            return@addOnSuccessListener
+                        }
 
                         val homeLat = settingsManager.getLatitude()
                         val homeLon = settingsManager.getLongitude()
@@ -84,48 +91,38 @@ class MixerViewModel(
                                 distanceKm < 50 -> 2.0f
                                 else -> 3.0f
                             }
+                            speechText.value = "Du bist $distanceKm km entfernt. Bonus: x${heartMultiplier.value}!"
+                        } else {
+                            speechText.value = "Diagnose: Heimat-Koordinaten sind 0.0"
                         }
 
+                        // Stadt-Erkennung & DB-Sync
                         val geocoder = Geocoder(context, Locale.getDefault())
                         viewModelScope.launch(Dispatchers.IO) {
                             try {
                                 val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
                                 val cityName = addresses?.firstOrNull()?.locality ?: "Unbekannter Ort"
                                 currentDestination.value = cityName
-
-                                // Korrektur: Nutze insertDestination statt insertInitial
-                                // Parameter: cityName, isDiscovered, heartsCollected
-                                if (travelDao.getDestinationByName(cityName) == null) {
-                                    travelDao.insertDestination(
-                                        TravelDestination(cityName = cityName, isDiscovered = true, heartsCollected = 0)
-                                    )
-                                }
-                            } catch (e: Exception) { }
+                                travelDao.insertDestination(TravelDestination(cityName = cityName, heartsCollected = 0))
+                            } catch (e: Exception) { /* Geocoding Fehler */ }
                         }
+                    }.addOnFailureListener { e ->
+                        speechText.value = "Diagnose Fehler: ${e.message}"
                     }
-            } catch (e: Exception) { }
+            } catch (e: Exception) {
+                speechText.value = "Diagnose Crash: ${e.message}"
+                delay(3000); speechText.value = ""
+            }
         }
     }
 
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
-        val cityName = currentDestination.value
-
+        totalHearts.value += pointsToAdd
+        settingsManager.saveHearts(totalHearts.value)
         viewModelScope.launch(Dispatchers.IO) {
-            // Korrektur: Nutze addHeartsToCity statt incrementHearts
-            travelDao.addHeartsToCity(cityName, pointsToAdd)
-
-            // Falls Geocoding noch nicht fertig war, Stadt sicherheitshalber anlegen
-            if (travelDao.getDestinationByName(cityName) == null) {
-                travelDao.insertDestination(
-                    TravelDestination(cityName = cityName, isDiscovered = true, heartsCollected = pointsToAdd)
-                )
-            }
-
-            val newTotal = travelDao.getTotalHeartsSum() ?: 0
-            launch(Dispatchers.Main) {
-                totalHearts.value = newTotal
-                settingsManager.saveHearts(newTotal)
+            currentDestination.value.let { cityName ->
+                travelDao.addHeartsToCity(cityName, pointsToAdd)
             }
         }
     }
@@ -169,7 +166,7 @@ class MixerViewModel(
                         addresses?.firstOrNull()?.let { addr ->
                             updateAddress(addr.thoroughfare ?: "", addr.subThoroughfare ?: "", addr.postalCode ?: "", addr.locality ?: "")
                         }
-                    } catch (e: Exception) { }
+                    } catch (e: Exception) { /* ignore */ }
                 }
             }
     }
