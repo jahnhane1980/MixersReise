@@ -27,16 +27,16 @@ class MixerViewModel(
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-    // --- WIEDERHERGESTELLTE GAME-STATES (Fix für Unresolved References) ---
+    // Game-States
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
-    var speechText = mutableStateOf("")
+    var speechText = mutableStateOf("") // Wird im init-Block gefüllt
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
 
-    // --- SETTINGS STATES ---
+    // Settings States
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
@@ -48,7 +48,24 @@ class MixerViewModel(
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    // --- GAME LOGIK (Fix für petMixer/selectTool) ---
+    // R1: Physical Truth - Begrüßungslogik im init-Block
+    init {
+        val savedName = settingsManager.getUserName()
+        speechText.value = if (!savedName.isNullOrBlank()) {
+            "Hallo $savedName"
+        } else {
+            "Hallo"
+        }
+
+        // Optional: Die Sprechblase nach ein paar Sekunden wieder ausblenden
+        viewModelScope.launch {
+            delay(5000)
+            if (speechText.value.startsWith("Hallo")) {
+                speechText.value = ""
+            }
+        }
+    }
+
     fun selectTool(tool: ToolType?) {
         activeTool.value = tool
     }
@@ -60,14 +77,12 @@ class MixerViewModel(
             showHearts.value = true
             totalHearts.value += 1
             settingsManager.saveHearts(totalHearts.value)
-            // Hinweis: currentDestination Logik hier optional wieder einfügen falls im Repo vorhanden
             delay(4000)
             showHearts.value = false
             isInteractionLocked.value = false
         }
     }
 
-    // --- LOCATION LOGIK (Die neue Funktion) ---
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
