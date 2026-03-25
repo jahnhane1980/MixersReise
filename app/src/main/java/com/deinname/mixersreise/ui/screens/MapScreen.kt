@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.ui.components.SafeImage
+import com.deinname.mixersreise.ui.theme.WarmWood
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
@@ -53,7 +54,7 @@ fun MapScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Zurück",
-                        tint = Color.Black
+                        tint = WarmWood // Zurück-Pfeil ebenfalls WarmWood
                     )
                 }
 
@@ -63,7 +64,7 @@ fun MapScreen(
                     text = "Reise-Statistik",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = WarmWood // Titelfarbe geändert
                 )
             }
 
@@ -88,7 +89,7 @@ fun MapScreen(
                             text = "${destination.heartsCollected}",
                             modifier = Modifier.weight(1f),
                             fontSize = 16.sp,
-                            color = Color.Black
+                            color = WarmWood // Herzen-Anzahl geändert
                         )
 
                         Text(
@@ -96,7 +97,7 @@ fun MapScreen(
                             modifier = Modifier.weight(2f),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.Black
+                            color = WarmWood // Stadtname geändert
                         )
                     }
                     HorizontalDivider(thickness = 0.5.dp, color = Color.Gray)
