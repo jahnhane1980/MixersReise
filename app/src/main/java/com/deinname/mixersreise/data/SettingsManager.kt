@@ -6,7 +6,6 @@ import android.content.SharedPreferences
 class SettingsManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
 
-    // Bestehende Funktionen (Physisch im Repo)
     fun saveHearts(count: Int) = prefs.edit().putInt("hearts", count).apply()
     fun getHearts(): Int = prefs.getInt("hearts", 0)
 
@@ -25,7 +24,6 @@ class SettingsManager(context: Context) {
     fun saveCity(value: String) = prefs.edit().putString("city", value).apply()
     fun getCity(): String? = prefs.getString("city", null)
 
-    // Diese beiden brauchen wir zwingend für die Distanz:
     fun saveLocation(lat: Double, lon: Double) {
         prefs.edit()
             .putFloat("latitude", lat.toFloat())

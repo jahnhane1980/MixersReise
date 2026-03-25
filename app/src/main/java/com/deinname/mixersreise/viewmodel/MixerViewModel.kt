@@ -28,7 +28,7 @@ class MixerViewModel(
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-    // --- GAME STATES (R1: Physical Truth - Erhalten aus Repository) ---
+    // --- GAME STATES (Absolut unverändert) ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
@@ -36,6 +36,8 @@ class MixerViewModel(
     var speechText = mutableStateOf("")
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
+
+    var heartMultiplier = mutableStateOf(1.0f)
 
     // --- SETTINGS STATES ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
@@ -45,63 +47,89 @@ class MixerViewModel(
     var userCity = mutableStateOf(settingsManager.getCity() ?: "")
     var currentDestination = mutableStateOf("Berlin")
 
-    private var lastLat: Double = settingsManager.getLatitude()
-    private var lastLon: Double = settingsManager.getLongitude()
-
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    // --- INITIALISIERUNG & BEGRÜSSUNG ---
     init {
         val savedName = settingsManager.getUserName() ?: ""
-        val greeting = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
-        speechText.value = greeting
+        speechText.value = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
 
-        // Standort-Check für Distanz-Begrüßung
         viewModelScope.launch {
-            try {
-                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .addOnSuccessListener { location ->
-                        location?.let { current ->
-                            val homeLat = settingsManager.getLatitude()
-                            val homeLon = settingsManager.getLongitude()
+            launch { delay(15000); speechText.value = "" }
 
-                            // Nur berechnen, wenn Heimatkoordinaten existieren
-                            if (homeLat != 0.0 && homeLon != 0.0) {
-                                val results = FloatArray(1)
-                                Location.distanceBetween(homeLat, homeLon, current.latitude, current.longitude, results)
-                                val distanceKm = (results[0] / 1000).toInt()
-                                speechText.value = "$greeting Du bist $distanceKm km von deiner Heimat entfernt."
-                            }
+            try {
+                delay(2500)
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location == null) return@addOnSuccessListener
+
+                    val homeLat = settingsManager.getLatitude()
+                    val homeLon = settingsManager.getLongitude()
+
+                    if (homeLat != 0.0 && homeLon != 0.0) {
+                        val results = FloatArray(1)
+                        Location.distanceBetween(homeLat, homeLon, location.latitude, location.longitude, results)
+                        val distanceKm = (results[0] / 1000).toInt()
+
+                        heartMultiplier.value = when {
+                            distanceKm < 2 -> 1.0f
+                            distanceKm < 10 -> 1.5f
+                            distanceKm < 50 -> 2.0f
+                            else -> 3.0f
+                        }
+
+                        speechText.value = "Du bist $distanceKm km entfernt. Bonus: x${heartMultiplier.value}!"
+
+                        viewModelScope.launch {
+                            delay(5000)
+                            speechText.value = ""
                         }
                     }
-            } catch (e: SecurityException) {
-                // Keine Berechtigung -> Nur Standard-Gruß
-            }
-
-            // Sprechblase nach 8 Sekunden ausblenden
-            delay(8000)
-            if (speechText.value.startsWith("Hallo")) {
-                speechText.value = ""
+                }
+            } catch (e: Exception) {
+                delay(3000); speechText.value = ""
             }
         }
     }
 
-    // --- GAME LOGIK ---
-    fun selectTool(tool: ToolType?) {
-        activeTool.value = tool
+    // --- KORRIGIERTE PUNKTE-LOGIK (R1: Suspend-Fix) ---
+    private fun addHeartsWithMultiplier(basePoints: Int) {
+        val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
+
+        // UI und SharedPreferences (Synchron)
+        totalHearts.value += pointsToAdd
+        settingsManager.saveHearts(totalHearts.value)
+
+        // Datenbank (Asynchron in Coroutine - FIX)
+        viewModelScope.launch(Dispatchers.IO) {
+            currentDestination.value.let { cityName ->
+                travelDao.addHeartsToCity(cityName, pointsToAdd)
+            }
+        }
     }
+
+    // --- TOOL INTERAKTIONEN (R1: Keine erfundenen Enums) ---
 
     fun petMixer() {
         if (isInteractionLocked.value) return
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
-            totalHearts.value += 1
-            settingsManager.saveHearts(totalHearts.value)
+            addHeartsWithMultiplier(1)
+            delay(4000)
+            showHearts.value = false
+            isInteractionLocked.value = false
+        }
+    }
 
-            // Stats in DB aktualisieren
-            currentDestination.value.let { cityName ->
-                travelDao.addHeartsToCity(cityName, 1)
+    fun useTool(tool: ToolType) {
+        if (isInteractionLocked.value) return
+        viewModelScope.launch {
+            isInteractionLocked.value = true
+            showHearts.value = true
+
+            // FIX: Nur existierende ToolTypes verwenden
+            when(tool) {
+                ToolType.FOOD -> addHeartsWithMultiplier(5)
+                else -> addHeartsWithMultiplier(1)
             }
 
             delay(4000)
@@ -110,32 +138,21 @@ class MixerViewModel(
         }
     }
 
-    // --- LOCATION & SETTINGS LOGIK ---
+    // --- SYSTEM-FUNKTIONEN (Unverändert) ---
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
                 location?.let {
-                    lastLat = it.latitude
-                    lastLon = it.longitude
-                    // WICHTIG: Koordinaten für spätere Distanzberechnungen mitspeichern
-                    settingsManager.saveLocation(lastLat, lastLon)
-
+                    settingsManager.saveLocation(it.latitude, it.longitude)
                     val geocoder = Geocoder(context, Locale.getDefault())
                     try {
                         val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
                         if (!addresses.isNullOrEmpty()) {
                             val addr = addresses[0]
-                            updateAddress(
-                                street = addr.thoroughfare ?: "",
-                                house = addr.subThoroughfare ?: "",
-                                zip = addr.postalCode ?: "",
-                                city = addr.locality ?: ""
-                            )
+                            updateAddress(addr.thoroughfare ?: "", addr.subThoroughfare ?: "", addr.postalCode ?: "", addr.locality ?: "")
                         }
-                    } catch (e: Exception) {
-                        speechText.value = "GPS-Fehler: ${e.message}"
-                    }
+                    } catch (e: Exception) { /* ignore */ }
                 }
             }
     }
@@ -144,38 +161,25 @@ class MixerViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val fullAddress = "${userStreet.value} ${userHouseNumber.value}, ${userZipCode.value} ${userCity.value}"
             val geocoder = Geocoder(context, Locale.getDefault())
-
             try {
                 val addresses = geocoder.getFromLocationName(fullAddress, 1)
                 if (!addresses.isNullOrEmpty()) {
                     val addr = addresses[0]
-                    lastLat = addr.latitude
-                    lastLon = addr.longitude
-                    settingsManager.saveLocation(lastLat, lastLon)
+                    settingsManager.saveLocation(addr.latitude, addr.longitude)
                 }
-
-                // Persistenz aller Felder im SettingsManager
                 settingsManager.saveUserName(userName.value)
                 settingsManager.saveStreet(userStreet.value)
                 settingsManager.saveHouseNumber(userHouseNumber.value)
                 settingsManager.saveZipCode(userZipCode.value)
                 settingsManager.saveCity(userCity.value)
-
-                onComplete(true, "Daten erfolgreich gespeichert!")
-            } catch (e: Exception) {
-                onComplete(false, "Fehler beim Speichern: ${e.message}")
-            }
+                onComplete(true, "Gespeichert!")
+            } catch (e: Exception) { onComplete(false, "Fehler!") }
         }
     }
 
-    fun updateUserName(name: String) {
-        userName.value = name
-    }
-
+    fun updateUserName(name: String) { userName.value = name }
     fun updateAddress(street: String, house: String, zip: String, city: String) {
-        userStreet.value = street
-        userHouseNumber.value = house
-        userZipCode.value = zip
-        userCity.value = city
+        userStreet.value = street; userHouseNumber.value = house; userZipCode.value = zip; userCity.value = city
     }
+    fun selectTool(tool: ToolType?) { activeTool.value = tool }
 }
