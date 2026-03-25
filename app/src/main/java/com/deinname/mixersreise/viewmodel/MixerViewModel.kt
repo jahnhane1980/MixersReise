@@ -40,59 +40,38 @@ class MixerViewModel(
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
 
-    // --- SETTINGS STATES ---
+    // --- SETTINGS STATES (UI-Buffer) ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
     var userCity = mutableStateOf(settingsManager.getCity() ?: "")
 
+    // KORREKTUR: Aufruf der DAO-Funktion getAllDestinations()
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
-        // Initial-Anzeige der geladenen Werte
-        val loadedName = userName.value.ifBlank { "Unbekannt" }
-        val loadedStreet = userStreet.value.ifBlank { "Keine Straße" }
-        val loadedCity = userCity.value.ifBlank { "Keine Stadt" }
-
-        speechText.value = "Geladen: $loadedName, $loadedStreet, $loadedCity"
-
-        viewModelScope.launch {
-            delay(10000)
-            if (speechText.value.startsWith("Geladen:")) {
-                speechText.value = ""
-            }
-        }
-
-        viewModelScope.launch {
-            try {
-                delay(2500)
-                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .addOnSuccessListener { location ->
-                        if (location == null) return@addOnSuccessListener
-
-                        val homeLat = settingsManager.getLatitude()
-                        val homeLon = settingsManager.getLongitude()
-
-                        if (homeLat != 0.0 && homeLon != 0.0) {
-                            val results = FloatArray(1)
-                            Location.distanceBetween(homeLat, homeLon, location.latitude, location.longitude, results)
-                            val distanceKm = (results[0] / 1000).toInt()
-
-                            heartMultiplier.value = when {
-                                distanceKm < 2 -> 1.0f
-                                distanceKm < 10 -> 1.5f
-                                distanceKm < 50 -> 2.0f
-                                else -> 3.0f
-                            }
-                            speechText.value = "Entfernung: $distanceKm km. Bonus: x${heartMultiplier.value}!"
-                        }
-                    }
-            } catch (e: Exception) {}
+        val cityInStore = settingsManager.getCity()
+        if (cityInStore.isNullOrBlank()) {
+            speechText.value = "DEBUG: Speicher leer, starte GPS..."
+            detectLocationViaGps()
+        } else {
+            speechText.value = "Willkommen in $cityInStore!"
         }
     }
 
-    // --- INTERACTION METHODS (RE-INSTATED) ---
+    // --- INTERACTION METHODS ---
+
+    fun updateUserName(name: String) {
+        userName.value = name
+    }
+
+    fun updateAddress(street: String, house: String, zip: String, city: String) {
+        userStreet.value = street
+        userHouseNumber.value = house
+        userZipCode.value = zip
+        userCity.value = city
+    }
 
     fun petMixer() {
         if (isInteractionLocked.value) return
@@ -121,64 +100,74 @@ class MixerViewModel(
         }
     }
 
-    private fun addHeartsWithMultiplier(baseAmount: Int) {
-        val multipliedAmount = (baseAmount * heartMultiplier.value).toInt()
-        val newTotal = settingsManager.getHearts() + multipliedAmount
+    private fun addHeartsWithMultiplier(basePoints: Int) {
+        val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
+        val currentTotal = settingsManager.getHearts()
+        val newTotal = currentTotal + pointsToAdd
         settingsManager.saveHearts(newTotal)
         totalHearts.value = newTotal
     }
 
-    // --- SETTINGS & LOCATION LOGIC ---
+    // --- LOCATION & PERSISTENCE LOGIC ---
 
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
             .addOnSuccessListener { location ->
                 location?.let {
-                    settingsManager.saveLocation(it.latitude, it.longitude)
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    try {
-                        val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                        addresses?.firstOrNull()?.let { addr ->
-                            val street = addr.thoroughfare ?: ""
-                            val house = addr.subThoroughfare ?: ""
-                            val zip = addr.postalCode ?: ""
-                            val city = addr.locality ?: ""
+                    viewModelScope.launch(Dispatchers.IO) {
+                        try {
+                            settingsManager.saveLocation(it.latitude, it.longitude)
+                            val geocoder = Geocoder(context, Locale.getDefault())
+                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
 
-                            settingsManager.saveStreet(street)
-                            settingsManager.saveHouseNumber(house)
-                            settingsManager.saveZipCode(zip)
-                            settingsManager.saveCity(city)
+                            addresses?.firstOrNull()?.let { addr ->
+                                val street = addr.thoroughfare ?: ""
+                                val house = addr.subThoroughfare ?: ""
+                                val zip = addr.postalCode ?: ""
+                                val city = addr.locality ?: ""
 
-                            updateAddress(street, house, zip, city)
+                                // Persistenz: Sofort schreiben
+                                settingsManager.saveStreet(street)
+                                settingsManager.saveHouseNumber(house)
+                                settingsManager.saveZipCode(zip)
+                                settingsManager.saveCity(city)
+
+                                val verifyCity = settingsManager.getCity()
+
+                                launch(Dispatchers.Main) {
+                                    updateAddress(street, house, zip, city)
+                                    speechText.value = if (verifyCity == city) {
+                                        "ERFOLG: $city gespeichert!"
+                                    } else {
+                                        "FEHLER: Speicher-Mismatch!"
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            launch(Dispatchers.Main) {
+                                speechText.value = "CRASH: ${e.message}"
+                            }
                         }
-                    } catch (e: Exception) {}
+                    }
                 }
             }
     }
 
-    fun updateUserName(name: String) { userName.value = name }
-    fun updateAddress(street: String, house: String, zip: String, city: String) {
-        userStreet.value = street; userHouseNumber.value = house; userZipCode.value = zip; userCity.value = city
-    }
-    fun selectTool(tool: ToolType?) { activeTool.value = tool }
-
     fun saveAllSettingsWithGeocoding(onComplete: (Boolean, String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val fullAddress = "${userStreet.value} ${userHouseNumber.value}, ${userZipCode.value} ${userCity.value}"
-            val geocoder = Geocoder(context, Locale.getDefault())
             try {
-                val addresses = geocoder.getFromLocationName(fullAddress, 1)
-                addresses?.firstOrNull()?.let { addr ->
-                    settingsManager.saveLocation(addr.latitude, addr.longitude)
-                }
                 settingsManager.saveUserName(userName.value)
                 settingsManager.saveStreet(userStreet.value)
                 settingsManager.saveHouseNumber(userHouseNumber.value)
                 settingsManager.saveZipCode(userZipCode.value)
                 settingsManager.saveCity(userCity.value)
-                onComplete(true, "Gespeichert!")
-            } catch (e: Exception) { onComplete(false, "Fehler!") }
+                launch(Dispatchers.Main) { onComplete(true, "Gespeichert!") }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) { onComplete(false, "Fehler!") }
+            }
         }
     }
+
+    fun selectTool(tool: ToolType?) { activeTool.value = tool }
 }
