@@ -52,7 +52,7 @@ class MixerViewModel(
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    
+
     init {
         viewModelScope.launch {
             // 1. Summe aus DB holen (auf Background-Thread)
@@ -63,6 +63,15 @@ class MixerViewModel(
             // 2. State & Settings mit DB-Wahrheit abgleichen
             settingsManager.saveHearts(dbSum)
             totalHearts.value = dbSum
+
+            //abspeichern Standard Name
+            val savedName = settingsManager.getUserName()
+            if (savedName.isNullOrBlank()) {
+                settingsManager.saveUserName("Entdecker")
+                userName.value = "Entdecker"
+            } else {
+                userName.value = savedName
+            }
 
             // 3. Deine bestehende GPS-Logik
             if (settingsManager.getCity().isNullOrBlank()) {
