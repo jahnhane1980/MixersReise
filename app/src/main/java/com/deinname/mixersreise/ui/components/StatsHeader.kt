@@ -26,13 +26,6 @@ fun StatsHeader(level: Int, hearts: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Lv. $level",
-            color = LemonChiffon,
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
             text = "❤️ $hearts",
             color = Color.White,
             fontWeight = FontWeight.ExtraBold,

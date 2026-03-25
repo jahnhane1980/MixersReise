@@ -1,81 +1,226 @@
 package com.deinname.mixersreise.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Geocoder
+import android.location.Location
+import android.os.Looper
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.deinname.mixersreise.data.SettingsManager
+import com.deinname.mixersreise.data.TravelDao
+import com.deinname.mixersreise.data.TravelDestination
+import com.google.android.gms.location.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import java.util.Locale
 
-class MixerViewModel(private val settingsManager: Any) : ViewModel() {
-    // Falls dein SettingsManager einen echten Typ hat, ersetze 'Any' durch diesen Typ.
+class MixerViewModel(
+    private val travelDao: TravelDao,
+    private val settingsManager: SettingsManager,
+    private val externalScope: CoroutineScope,
+    private val context: Context
+) : ViewModel() {
 
-    // --- Benutzerdaten (States) ---
-    val userName = mutableStateOf("User")
-    val userStreet = mutableStateOf("")
-    val userHouseNumber = mutableStateOf("")
-    val userZipCode = mutableStateOf("")
-    val userCity = mutableStateOf("")
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    private var gpsCheckJob: Job? = null
 
-    private val _destinations = mutableStateListOf<String>()
-    val destinations: List<String> = _destinations
+    // --- GAME STATES ---
+    var totalHearts = mutableStateOf(settingsManager.getHearts())
+    var isInteractionLocked = mutableStateOf(false) // Steuert die Blockierung der UI
+    var showHearts = mutableStateOf(false)
+    var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
+    var speechText = mutableStateOf("")
+    var isSleeping = mutableStateOf(false)
+    var droolAlpha = mutableStateOf(0f)
 
-    // --- Status-Werte ---
-    val level = 1
-    val totalHearts = mutableStateOf(0)
-    val hunger = mutableStateOf(1.0f)
-    val hygiene = mutableStateOf(1.0f)
-    val social = mutableStateOf(1.0f)
-    val boredom = mutableStateOf(1.0f)
+    var heartMultiplier = mutableStateOf(1.0f)
+    var currentDestination = mutableStateOf("Heimat")
 
-    // --- UI-States ---
-    val isSleeping = mutableStateOf(false)
-    val droolAlpha = mutableStateOf(0f)
-    val speechText = mutableStateOf("")
-    val activeTool = mutableStateOf(ToolType.NONE)
+    // --- SETTINGS STATES ---
+    var userName = mutableStateOf(settingsManager.getUserName() ?: "Entdecker")
+    var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
+    var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
+    var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
+    var userCity = mutableStateOf(settingsManager.getCity() ?: "")
 
-    // --- DIESE METHODEN FEHLTEN (Fix für SettingsDialog) ---
+    val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    fun updateUserName(newName: String) {
-        userName.value = newName
+    init {
+        if (settingsManager.getCity().isNullOrBlank()) {
+            detectLocationViaGps()
+        } else {
+            speechText.value = "Willkommen zurück!"
+        }
     }
 
-    fun detectLocationViaGps() {
-        // Später kommt hier die GPS-Logik rein
-        speechText.value = "Suche GPS Signal..."
+    // --- UI & INTERACTION METHODS ---
+
+    fun selectTool(tool: ToolType?) {
+        if (isInteractionLocked.value) return
+        activeTool.value = tool
     }
 
-    fun updateAddress(street: String, nr: String, zip: String, city: String) {
+    fun updateUserName(name: String) {
+        userName.value = name
+    }
+
+    fun updateAddress(street: String, house: String, zip: String, city: String) {
         userStreet.value = street
-        userHouseNumber.value = nr
+        userHouseNumber.value = house
         userZipCode.value = zip
         userCity.value = city
     }
 
-    // --- Logik-Funktionen (Für die Toolbar) ---
-
-    fun feedMixer() {
-        hunger.value = (hunger.value + 0.3f).coerceAtMost(1.0f)
-        totalHearts.value += 10
-        speechText.value = "Mampf! Danke!"
-    }
-
     fun petMixer() {
-        social.value = (social.value + 0.2f).coerceAtMost(1.0f)
-        totalHearts.value += 5
-        speechText.value = "Das tut gut..."
+        if (isInteractionLocked.value) return
+        viewModelScope.launch {
+            isInteractionLocked.value = true
+            showHearts.value = true
+            addHeartsWithMultiplier(1)
+            delay(4000)
+            showHearts.value = false
+            isInteractionLocked.value = false
+        }
     }
 
-    fun cleanMixer() {
-        hygiene.value = (hygiene.value + 0.5f).coerceAtMost(1.0f)
-        totalHearts.value += 8
-        speechText.value = "Blitzblank!"
+    fun useTool(tool: ToolType) {
+        if (isInteractionLocked.value) return
+        viewModelScope.launch {
+            isInteractionLocked.value = true
+            showHearts.value = true
+            when (tool) {
+                ToolType.FOOD -> addHeartsWithMultiplier(5)
+                else -> addHeartsWithMultiplier(1)
+            }
+            delay(4000)
+            showHearts.value = false
+            isInteractionLocked.value = false
+        }
     }
 
-    fun talkToMixer() {
-        boredom.value = (boredom.value + 0.25f).coerceAtMost(1.0f)
-        totalHearts.value += 5
-        speechText.value = "Erzähl mir mehr!"
+    private fun addHeartsWithMultiplier(basePoints: Int) {
+        val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
+        val newTotal = settingsManager.getHearts() + pointsToAdd
+        settingsManager.saveHearts(newTotal)
+        totalHearts.value = newTotal
     }
 
-    fun selectTool(tool: ToolType) {
-        activeTool.value = if (activeTool.value == tool) ToolType.NONE else tool
+    // --- GPS INITIALISIERUNGS-SPERRE LOGIC ---
+
+    @SuppressLint("MissingPermission")
+    fun detectLocationViaGps() {
+        gpsCheckJob?.cancel()
+        gpsCheckJob = viewModelScope.launch {
+            isInteractionLocked.value = true // Oberfläche sperren
+            var locationFound = false
+            var attempts = 0
+            val maxAttempts = 2
+
+            while (!locationFound && attempts < maxAttempts) {
+                speechText.value = if (attempts == 0)
+                    "Suche Geodaten... Bitte warten."
+                else
+                    "Zweiter Versuch... Oberfläche bleibt gesperrt."
+
+                val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000)
+                    .setMaxUpdates(1)
+                    .build()
+
+                val currentAttemptJob = launch {
+                    val locationCallback = object : LocationCallback() {
+                        override fun onLocationResult(result: LocationResult) {
+                            result.lastLocation?.let {
+                                locationFound = true
+                                processLocation(it)
+                            }
+                        }
+                    }
+
+                    try {
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            locationCallback,
+                            Looper.getMainLooper()
+                        )
+                        delay(6000)
+                    } finally {
+                        fusedLocationClient.removeLocationUpdates(locationCallback)
+                    }
+                }
+
+                currentAttemptJob.join()
+
+                if (!locationFound) {
+                    attempts++
+                    if (attempts >= maxAttempts) {
+                        speechText.value = "Kein GPS-Fix möglich. Bitte Ort manuell eingeben!"
+                        delay(4000)
+                        speechText.value = ""
+                        isInteractionLocked.value = false // Sperre aufheben, damit User manuell tippen kann
+                    }
+                }
+            }
+            if (locationFound) {
+                isInteractionLocked.value = false // Sperre bei Erfolg aufheben
+            }
+        }
+    }
+
+    private fun processLocation(location: Location) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+
+                addresses?.firstOrNull()?.let { addr ->
+                    val street = addr.thoroughfare ?: ""
+                    val house = addr.subThoroughfare ?: ""
+                    val zip = addr.postalCode ?: ""
+                    val city = addr.locality ?: ""
+
+                    settingsManager.saveLocation(location.latitude, location.longitude)
+                    settingsManager.saveStreet(street)
+                    settingsManager.saveHouseNumber(house)
+                    settingsManager.saveZipCode(zip)
+                    settingsManager.saveCity(city)
+
+                    launch(Dispatchers.Main) {
+                        updateAddress(street, house, zip, city)
+                        speechText.value = "Ort erkannt: $city!"
+                        delay(3000)
+                        speechText.value = ""
+                    }
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    speechText.value = "Adress-Fehler. Internetverbindung prüfen."
+                }
+            }
+        }
+    }
+
+    fun saveAllSettingsWithGeocoding(onComplete: (Boolean, String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                settingsManager.saveUserName(userName.value)
+                settingsManager.saveStreet(userStreet.value)
+                settingsManager.saveHouseNumber(userHouseNumber.value)
+                settingsManager.saveZipCode(userZipCode.value)
+                settingsManager.saveCity(userCity.value)
+                launch(Dispatchers.Main) {
+                    onComplete(true, "Gespeichert!")
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    onComplete(false, "Fehler!")
+                }
+            }
+        }
     }
 }

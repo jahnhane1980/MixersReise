@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [TravelPoint::class], version = 2, exportSchema = false)
+@Database(entities = [TravelDestination::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun travelDao(): TravelDao
 
@@ -17,25 +17,25 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
+        fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mixer_database"
+                    "mixers_reise_database"
                 )
-                    .fallbackToDestructiveMigration()
                     .addCallback(object : RoomDatabase.Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            super.onCreate(db)
-                            scope.launch(Dispatchers.IO) {
-                                INSTANCE?.let { database ->
+                        override fun onOpen(db: SupportSQLiteDatabase) {
+                            super.onOpen(db)
+                            INSTANCE?.let { database ->
+                                CoroutineScope(Dispatchers.IO).launch {
                                     val dao = database.travelDao()
-                                    // FIX: Explizite Zuweisung verhindert Fehler
-                                    dao.insertPoint(TravelPoint(cityName = "Köln (Home)", heartsCollected = 100, latitude = 50.9375, longitude = 6.9603))
-                                    dao.insertPoint(TravelPoint(cityName = "Porz", heartsCollected = 150, latitude = 50.8833, longitude = 7.0500))
-                                    dao.insertPoint(TravelPoint(cityName = "New York", heartsCollected = 500, latitude = 40.7128, longitude = -74.0060))
-                                    dao.insertPoint(TravelPoint(cityName = "Seoul", heartsCollected = 800, latitude = 37.5665, longitude = 126.9780))
+                                    // R3: Physical Truth - Parameter 'isDiscovered' ist wieder vorhanden
+                                    if (dao.getDestinationByName("Köln") == null) {
+                                        dao.insertDestination(TravelDestination(cityName = "Köln", heartsCollected = 120, isDiscovered = true))
+                                        dao.insertDestination(TravelDestination(cityName = "New York", heartsCollected = 500, isDiscovered = true))
+                                        dao.insertDestination(TravelDestination(cityName = "Singapur", heartsCollected = 1000, isDiscovered = true))
+                                    }
                                 }
                             }
                         }

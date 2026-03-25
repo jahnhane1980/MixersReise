@@ -1,160 +1,141 @@
 package com.deinname.mixersreise.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.deinname.mixersreise.ui.theme.*
+import androidx.compose.ui.window.Dialog
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 
 @Composable
 fun SettingsDialog(
-    onDismiss: () -> Unit,
-    viewModel: MixerViewModel
+    viewModel: MixerViewModel,
+    onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        // Hintergrund des Dialogs in warmem Beige
-        containerColor = LemonChiffon,
-        title = {
-            Text(
-                text = "Einstellungen",
-                style = MaterialTheme.typography.headlineSmall,
-                color = DarkWood,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
+    var message by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
-                // Info-Text
                 Text(
-                    text = "Hier kannst du deine Daten und Mixers Zuhause verwalten.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = DarkWood.copy(alpha = 0.8f)
+                    text = "Einstellungen",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Namens-Eingabe
                 OutlinedTextField(
                     value = viewModel.userName.value,
                     onValueChange = { viewModel.updateUserName(it) },
                     label = { Text("Dein Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = WarmWood,
-                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f),
-                        focusedLabelColor = WarmWood,
-                        cursorColor = WarmWood
-                    )
-                )
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = DarkWood.copy(alpha = 0.1f))
-
-                Text(
-                    text = "Standort (Zuhause)",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = DarkWood,
-                    fontWeight = FontWeight.Bold
-                )
-
-                // GPS Button (CosyBlue passend zum Halstuch)
-                Button(
-                    onClick = { viewModel.detectLocationViaGps() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = CosyBlue,
-                        contentColor = DarkWood // Dunkler Text auf hellem Blau für bessere Lesbarkeit
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("📍 Aktuellen Standort speichern", fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Heimatadresse",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = { viewModel.detectLocationViaGps() }) {
+                        Text("GPS")
+                    }
                 }
 
-                // Adresszeile 1: Straße
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = viewModel.userStreet.value,
                     onValueChange = {
                         viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
                     },
                     label = { Text("Straße") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = WarmWood,
-                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                // Adresszeile 2: Hausnummer & PLZ
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = viewModel.userHouseNumber.value,
                         onValueChange = {
                             viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
                         },
                         label = { Text("Nr.") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = WarmWood,
-                            unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
-                        )
+                        modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
                     OutlinedTextField(
                         value = viewModel.userZipCode.value,
                         onValueChange = {
                             viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value)
                         },
                         label = { Text("PLZ") },
-                        modifier = Modifier.weight(1.5f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = WarmWood,
-                            unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
-                        )
+                        modifier = Modifier.weight(2f)
                     )
                 }
 
-                // Adresszeile 3: Stadt
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = viewModel.userCity.value,
                     onValueChange = {
                         viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it)
                     },
                     label = { Text("Stadt") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = WarmWood,
-                        unfocusedBorderColor = DarkWood.copy(alpha = 0.5f)
-                    )
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
-        },
-        confirmButton = {
-            // Speichern Button (WarmWood mit LemonChiffon Schrift)
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = WarmWood,
-                    contentColor = LemonChiffon
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Fertig", fontWeight = FontWeight.Bold)
+
+                if (message.isNotEmpty()) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Abbrechen")
+                    }
+                    Button(
+                        onClick = {
+                            viewModel.saveAllSettingsWithGeocoding { success, info ->
+                                message = info
+                                if (success) {
+                                    onDismiss()
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Speichern")
+                    }
+                }
             }
         }
-    )
+    }
 }

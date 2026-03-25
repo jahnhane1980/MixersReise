@@ -11,32 +11,62 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.deinname.mixersreise.ui.theme.DarkWood
+import com.deinname.mixersreise.ui.theme.LemonChiffon
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MixerTopBar(
-    level: Int,
     hearts: Int,
     onOpenMap: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    TopAppBar(
-        title = {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = DarkWood.copy(alpha = 0.8f),
+        tonalElevation = 0.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Herz-Anzeige (Wiederhergestellt)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Lv. $level", style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.width(16.dp))
-                Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.Red)
-                Spacer(Modifier.width(4.dp))
-                Text("$hearts", style = MaterialTheme.typography.titleMedium)
+                Icon(
+                    imageVector = Icons.Default.Favorite, // Zurück zum Herz-Icon
+                    contentDescription = "Hearts",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.Red // Explizit Rot wie gewünscht
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = hearts.toString(),
+                    color = LemonChiffon,
+                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleLarge
+                )
             }
-        },
-        actions = {
-            IconButton(onClick = onOpenMap) {
-                Icon(Icons.Default.Map, contentDescription = "Karte")
-            }
-            IconButton(onClick = onOpenSettings) {
-                Icon(Icons.Default.Settings, contentDescription = "Einstellungen")
+
+            // Buttons für Map und Settings
+            Row {
+                IconButton(onClick = onOpenMap) {
+                    Icon(
+                        imageVector = Icons.Default.Map,
+                        contentDescription = "Map",
+                        tint = LemonChiffon
+                    )
+                }
+                IconButton(onClick = onOpenSettings) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        tint = LemonChiffon
+                    )
+                }
             }
         }
-    )
+    }
 }

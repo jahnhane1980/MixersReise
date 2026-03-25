@@ -1,10 +1,17 @@
 package com.deinname.mixersreise
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.*
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.deinname.mixersreise.data.AppDatabase
+import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.ui.screens.HomeScreen
 import com.deinname.mixersreise.ui.screens.MapScreen
 import com.deinname.mixersreise.ui.theme.MixersReiseTheme
@@ -15,35 +22,49 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Hier dein reales SettingsManager-Objekt einfügen
-        val mySettingsManager = Any()
+        // Berechtigungs-Anfrage für GPS
+        val locationPermissionRequest = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            when {
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {}
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {}
+            }
+        }
+
+        locationPermissionRequest.launch(arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ))
+
+        val settingsManager = SettingsManager(applicationContext)
+        val database = AppDatabase.getDatabase(applicationContext)
+
+        val viewModel: MixerViewModel by viewModels {
+            // Synchronisation: Context wird für GPS nun mit übergeben
+            MixerViewModelFactory(database.travelDao(), settingsManager, lifecycleScope, applicationContext)
+        }
 
         setContent {
             MixersReiseTheme {
-                val viewModel: MixerViewModel = viewModel(
-                    factory = MixerViewModelFactory(mySettingsManager)
-                )
+                val navController = rememberNavController()
 
-                var currentScreen by remember { mutableStateOf("home") }
-
-                when (currentScreen) {
-                    "map" -> {
+                NavHost(navController = navController, startDestination = "home") {
+                    composable("home") {
+                        HomeScreen(
+                            viewModel = viewModel,
+                            onOpenMap = { navController.navigate("map") },
+                            onNavigateToWorld = { navController.navigate("world") }
+                        )
+                    }
+                    composable("map") {
                         MapScreen(
                             viewModel = viewModel,
-                            onBack = { currentScreen = "home" }
+                            onBack = { navController.popBackStack() }
                         )
                     }
-                    "home" -> {
-                        HomeScreen(
-                            viewModel = viewModel,
-                            onOpenMap = { currentScreen = "map" } // FIX: Parameter wird jetzt erkannt
-                        )
-                    }
-                    else -> {
-                        HomeScreen(
-                            viewModel = viewModel,
-                            onOpenMap = { currentScreen = "map" }
-                        )
+                    composable("world") {
+                        MixerWorldScreen(viewModel = viewModel)
                     }
                 }
             }
