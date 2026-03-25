@@ -40,10 +40,9 @@ fun MapScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xAAFFF9C4))
+                .background(Color(0x66FFF9C4))
                 .padding(16.dp)
         ) {
-            // NUR HIER WURDE DIE ROW MIT DEM ICON HINZUGEFÜGT
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,7 +67,6 @@ fun MapScreen(
                 )
             }
 
-            // AB HIER IST ALLES EXAKT WIE IM REPOSITORY
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
             ) {
