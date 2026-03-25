@@ -77,7 +77,9 @@ class MixerViewModel(
             if (settingsManager.getCity().isNullOrBlank()) {
                 detectLocationViaGps()
             } else {
-                speechText.value = "Willkommen zurück!"
+                // Beleg: Dynamische Begrüßung mit dem aktuellen Usernamen
+                val name = settingsManager.getUserName() ?: "Entdecker"
+                speechText.value = "Hallo $name!"
             }
         }
     }
