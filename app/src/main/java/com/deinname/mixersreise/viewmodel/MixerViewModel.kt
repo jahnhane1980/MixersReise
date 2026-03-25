@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlinx.coroutines.withContext
+import com.deinname.mixersreise.data.TalkOption
+import com.deinname.mixersreise.data.mixerTalkOptions
 
 class MixerViewModel(
     private val travelDao: TravelDao,
@@ -39,6 +41,8 @@ class MixerViewModel(
     var speechText = mutableStateOf("")
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
+
+    var showTalkMenu = mutableStateOf(false)
 
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
@@ -89,7 +93,15 @@ class MixerViewModel(
 
     fun selectTool(tool: ToolType?) {
         if (isInteractionLocked.value) return
+
+    // 1. Das Tool setzen (bestehende Logik)
         activeTool.value = tool
+
+        // 2. NEU: Spezial-Logik für TALK
+        // Wenn das Sprechblasen-Tool gewählt wird, öffnen wir das Menü
+        if (tool == ToolType.TALK) {
+            showTalkMenu.value = true
+        }
     }
 
     fun updateUserName(name: String) {
@@ -112,6 +124,22 @@ class MixerViewModel(
             delay(4000)
             showHearts.value = false
             isInteractionLocked.value = false
+        }
+    }
+
+
+    // MixerViewModel.kt -> Bei den Interaktions-Methoden
+    fun handleTalkOptionSelected(option: TalkOption) {
+        showTalkMenu.value = false // Menü schließen
+        speechText.value = option.answer // Mixer antwortet
+
+        viewModelScope.launch {
+            addHeartsWithMultiplier(2) // Belohnung
+            delay(4000)
+            // Nur löschen, wenn zwischenzeitlich keine neue Nachricht kam
+            if (speechText.value == option.answer) {
+                speechText.value = ""
+            }
         }
     }
 
