@@ -36,12 +36,12 @@ fun HomeScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(), // Globales Padding entfernt
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Oberer Bereich mit eigenem Padding
-            Box(modifier = Modifier.padding(16.dp)) {
+            // Die MixerTopBar wird hier auf die volle Breite gezwungen
+            Box(modifier = Modifier.fillMaxWidth()) {
                 MixerTopBar(
                     hearts = viewModel.totalHearts.value,
                     onOpenMap = onOpenMap,
@@ -49,7 +49,7 @@ fun HomeScreen(
                 )
             }
 
-            // Mittlerer Bereich (Content) mit eigenem Padding
+            // Der Content-Bereich behält sein Padding von 16.dp
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -68,20 +68,13 @@ fun HomeScreen(
                 )
             }
 
-            // Der HomeScreen erzwingt hier das Layout:
-            // Eine Box, die die Toolbar umschließt und auf volle Breite zieht.
-            // Die MixerToolBar selbst bekommt keinen Modifier übergeben.
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                MixerToolBar(
-                    activeTool = viewModel.activeTool.value,
-                    onToolSelected = { tool -> viewModel.selectTool(tool) }
-                )
-            }
+            // Die MixerToolBar am unteren Rand
+            MixerToolBar(
+                activeTool = viewModel.activeTool.value,
+                onToolSelected = { tool -> viewModel.selectTool(tool) }
+            )
         }
 
-        // ... (SettingsDialog und Overlay bleiben unverändert)
         if (showSettings) {
             SettingsDialog(
                 onDismiss = { showSettings = false },
