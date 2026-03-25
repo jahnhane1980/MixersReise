@@ -5,8 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +19,7 @@ import com.deinname.mixersreise.ui.components.MixerDisplay
 import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 import com.deinname.mixersreise.ui.components.MixerToolBar
 import com.deinname.mixersreise.ui.components.MixerTopBar
+import com.deinname.mixersreise.ui.components.SettingsDialog
 
 @Composable
 fun HomeScreen(
@@ -27,6 +27,9 @@ fun HomeScreen(
     onOpenMap: () -> Unit,
     onNavigateToWorld: () -> Unit
 ) {
+    // State für den Einstellungsdialog
+    var showSettings by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.bg_bedroom_plushies),
@@ -42,11 +45,11 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // FIX: Entfernung von onOpenWorld, da dieser Parameter in MixerTopBar nicht existiert
+            // MixerTopBar mit Logik-Verknüpfung für das Zahnrad
             MixerTopBar(
                 hearts = viewModel.totalHearts.value,
                 onOpenMap = onOpenMap,
-                onOpenSettings = { /* Logik für Settings */ }
+                onOpenSettings = { showSettings = true }
             )
 
             StatsHeader(
@@ -78,6 +81,14 @@ fun HomeScreen(
             MixerToolBar(
                 activeTool = viewModel.activeTool.value,
                 onToolSelected = { tool -> viewModel.selectTool(tool) }
+            )
+        }
+
+        // Dialog-Anzeige basierend auf State
+        if (showSettings) {
+            SettingsDialog(
+                onDismiss = { showSettings = false },
+                viewModel = viewModel
             )
         }
 
