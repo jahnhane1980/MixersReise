@@ -27,11 +27,10 @@ abstract class AppDatabase : RoomDatabase() {
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onOpen(db: SupportSQLiteDatabase) {
                             super.onOpen(db)
-                            // Daten nur einfügen, wenn die DB frisch geöffnet wird
                             INSTANCE?.let { database ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     val dao = database.travelDao()
-                                    // R3: Minimalist Selection - Nur einfügen, wenn Köln noch nicht existiert
+                                    // R3: Physical Truth - Parameter 'isDiscovered' ist wieder vorhanden
                                     if (dao.getDestinationByName("Köln") == null) {
                                         dao.insertDestination(TravelDestination(cityName = "Köln", heartsCollected = 120, isDiscovered = true))
                                         dao.insertDestination(TravelDestination(cityName = "New York", heartsCollected = 500, isDiscovered = true))

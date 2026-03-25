@@ -1,9 +1,14 @@
 package com.deinname.mixersreise.data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "travel_destinations")
+// R3: Cross-File Validation - Index hinzugefügt, um Dubletten bei cityName zu verhindern
+@Entity(
+    tableName = "travel_destinations",
+    indices = [Index(value = ["cityName"], unique = true)]
+)
 data class TravelDestination(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
