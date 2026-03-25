@@ -36,25 +36,27 @@ fun HomeScreen(
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            MixerTopBar(
-                hearts = viewModel.totalHearts.value,
-                onOpenMap = onOpenMap,
-                onOpenSettings = { showSettings = true }
-            )
+            // Oberer Bereich mit eigenem Padding
+            Box(modifier = Modifier.padding(16.dp)) {
+                MixerTopBar(
+                    hearts = viewModel.totalHearts.value,
+                    onOpenMap = onOpenMap,
+                    onOpenSettings = { showSettings = true }
+                )
+            }
 
+            // Mittlerer Bereich (Content) mit eigenem Padding
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.Center
             ) {
-                // MixerSpeechBubble wurde hier entfernt, da MixerDisplay sie intern anzeigt.
-
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
@@ -66,12 +68,20 @@ fun HomeScreen(
                 )
             }
 
-            MixerToolBar(
-                activeTool = viewModel.activeTool.value,
-                onToolSelected = { tool -> viewModel.selectTool(tool) }
-            )
+            // Der HomeScreen erzwingt hier das Layout:
+            // Eine Box, die die Toolbar umschließt und auf volle Breite zieht.
+            // Die MixerToolBar selbst bekommt keinen Modifier übergeben.
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                MixerToolBar(
+                    activeTool = viewModel.activeTool.value,
+                    onToolSelected = { tool -> viewModel.selectTool(tool) }
+                )
+            }
         }
 
+        // ... (SettingsDialog und Overlay bleiben unverändert)
         if (showSettings) {
             SettingsDialog(
                 onDismiss = { showSettings = false },
