@@ -12,7 +12,6 @@ interface TravelDao {
     @Query("SELECT * FROM travel_destinations ORDER BY heartsCollected DESC")
     fun getAllDestinations(): Flow<List<TravelDestination>>
 
-    // R2: Signature Synchronicity - Name muss exakt 'insertDestination' sein
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertDestination(destination: TravelDestination)
 
@@ -21,4 +20,8 @@ interface TravelDao {
 
     @Query("SELECT * FROM travel_destinations WHERE cityName = :cityName LIMIT 1")
     suspend fun getDestinationByName(cityName: String): TravelDestination?
+
+    // NEU: Summiert alle Herzen aus der Reisestatistik
+    @Query("SELECT SUM(heartsCollected) FROM travel_destinations")
+    suspend fun getTotalHeartsSum(): Int?
 }

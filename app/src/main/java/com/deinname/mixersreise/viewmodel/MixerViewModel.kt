@@ -28,7 +28,7 @@ class MixerViewModel(
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-    // --- GAME STATES (Absolut unverändert) ---
+    // --- GAME STATES ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
@@ -53,6 +53,15 @@ class MixerViewModel(
         val savedName = settingsManager.getUserName() ?: ""
         speechText.value = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
 
+        // Initialisierung der Herzen aus der DB-Summe
+        viewModelScope.launch(Dispatchers.IO) {
+            val dbSum = travelDao.getTotalHeartsSum() ?: 0
+            // Falls DB-Summe existiert, überschreiben wir den State
+            totalHearts.value = dbSum
+            // Synchronisation mit SettingsManager (optional, zur Sicherheit)
+            settingsManager.saveHearts(dbSum)
+        }
+
         viewModelScope.launch {
             // Sicherheits-Timer: Sprechblase leeren
             launch { delay(15000); speechText.value = "" }
@@ -62,7 +71,6 @@ class MixerViewModel(
                 fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                     .addOnSuccessListener { location ->
                         if (location == null) {
-                            // WIEDER EINGEBAUT: Diagnose GPS
                             speechText.value = "Diagnose: GPS-Location ist NULL"
                             return@addOnSuccessListener
                         }
@@ -83,7 +91,6 @@ class MixerViewModel(
                             }
                             speechText.value = "Du bist $distanceKm km entfernt. Bonus: x${heartMultiplier.value}!"
                         } else {
-                            // WIEDER EINGEBAUT: Diagnose Heimatkoordinaten
                             speechText.value = "Diagnose: Heimat-Koordinaten sind 0.0"
                         }
 
