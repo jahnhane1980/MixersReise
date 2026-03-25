@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.MixerViewModel
-import com.deinname.mixersreise.ui.components.StatsHeader
 import com.deinname.mixersreise.ui.components.MixerDisplay
 import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 import com.deinname.mixersreise.ui.components.MixerToolBar
@@ -27,7 +26,6 @@ fun HomeScreen(
     onOpenMap: () -> Unit,
     onNavigateToWorld: () -> Unit
 ) {
-    // State für den Einstellungsdialog
     var showSettings by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -45,17 +43,13 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // MixerTopBar mit Logik-Verknüpfung für das Zahnrad
             MixerTopBar(
                 hearts = viewModel.totalHearts.value,
                 onOpenMap = onOpenMap,
                 onOpenSettings = { showSettings = true }
             )
 
-            StatsHeader(
-                level = 1,
-                hearts = viewModel.totalHearts.value
-            )
+            // StatsHeader wurde hier entfernt.
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +78,6 @@ fun HomeScreen(
             )
         }
 
-        // Dialog-Anzeige basierend auf State
         if (showSettings) {
             SettingsDialog(
                 onDismiss = { showSettings = false },
