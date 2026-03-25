@@ -71,7 +71,8 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = viewModel.userStreet.value,
                         onValueChange = {
-                            viewModel.updateAddressState(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
+                            // Korrektur: Aufruf von 'updateAddress' statt 'updateAddressState'
+                            viewModel.updateAddress(it, viewModel.userHouseNumber.value, viewModel.userZipCode.value, viewModel.userCity.value)
                         },
                         label = { Text("Straße") },
                         modifier = Modifier.weight(0.7f),
@@ -81,7 +82,7 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = viewModel.userHouseNumber.value,
                         onValueChange = {
-                            viewModel.updateAddressState(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
+                            viewModel.updateAddress(viewModel.userStreet.value, it, viewModel.userZipCode.value, viewModel.userCity.value)
                         },
                         label = { Text("Nr.") },
                         modifier = Modifier.weight(0.3f),
@@ -96,7 +97,7 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = viewModel.userZipCode.value,
                         onValueChange = {
-                            viewModel.updateAddressState(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value)
+                            viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, it, viewModel.userCity.value)
                         },
                         label = { Text("PLZ") },
                         modifier = Modifier.weight(0.4f),
@@ -106,7 +107,7 @@ fun SettingsDialog(
                     OutlinedTextField(
                         value = viewModel.userCity.value,
                         onValueChange = {
-                            viewModel.updateAddressState(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it)
+                            viewModel.updateAddress(viewModel.userStreet.value, viewModel.userHouseNumber.value, viewModel.userZipCode.value, it)
                         },
                         label = { Text("Stadt") },
                         modifier = Modifier.weight(0.6f),
@@ -120,7 +121,7 @@ fun SettingsDialog(
                 Button(
                     onClick = {
                         viewModel.detectLocationViaGps()
-                        Toast.makeText(context, "Standort wird über GPS ermittelt...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "GPS wird abgefragt...", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
@@ -148,7 +149,6 @@ fun SettingsDialog(
                     Button(
                         onClick = {
                             viewModel.saveAllSettingsWithGeocoding { success, message ->
-                                // Sicherstellen, dass UI-Updates (Toast/Dismiss) auf dem Main-Thread laufen
                                 (context as? Activity)?.runOnUiThread {
                                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                     if (success) {

@@ -3,6 +3,7 @@ package com.deinname.mixersreise.viewmodel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Geocoder
+import android.location.Location
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,45 +28,65 @@ class MixerViewModel(
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-    // Game-States
+    // --- GAME STATES (R1: Physical Truth - Erhalten aus Repository) ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
-    var speechText = mutableStateOf("") // Wird im init-Block gefüllt
+    var speechText = mutableStateOf("")
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
 
-    // Settings States
+    // --- SETTINGS STATES ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
     var userCity = mutableStateOf(settingsManager.getCity() ?: "")
+    var currentDestination = mutableStateOf("Berlin")
 
     private var lastLat: Double = settingsManager.getLatitude()
     private var lastLon: Double = settingsManager.getLongitude()
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
-    // R1: Physical Truth - Begrüßungslogik im init-Block
+    // --- INITIALISIERUNG & BEGRÜSSUNG ---
     init {
-        val savedName = settingsManager.getUserName()
-        speechText.value = if (!savedName.isNullOrBlank()) {
-            "Hallo $savedName"
-        } else {
-            "Hallo"
-        }
+        val savedName = settingsManager.getUserName() ?: ""
+        val greeting = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
+        speechText.value = greeting
 
-        // Optional: Die Sprechblase nach ein paar Sekunden wieder ausblenden
+        // Standort-Check für Distanz-Begrüßung
         viewModelScope.launch {
-            delay(5000)
+            try {
+                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .addOnSuccessListener { location ->
+                        location?.let { current ->
+                            val homeLat = settingsManager.getLatitude()
+                            val homeLon = settingsManager.getLongitude()
+
+                            // Nur berechnen, wenn Heimatkoordinaten existieren
+                            if (homeLat != 0.0 && homeLon != 0.0) {
+                                val results = FloatArray(1)
+                                Location.distanceBetween(homeLat, homeLon, current.latitude, current.longitude, results)
+                                val distanceKm = (results[0] / 1000).toInt()
+                                speechText.value = "$greeting Du bist $distanceKm km von deiner Heimat entfernt."
+                            }
+                        }
+                    }
+            } catch (e: SecurityException) {
+                // Keine Berechtigung -> Nur Standard-Gruß
+            }
+
+            // Sprechblase nach 8 Sekunden ausblenden
+            delay(8000)
             if (speechText.value.startsWith("Hallo")) {
                 speechText.value = ""
             }
         }
     }
 
+    // --- GAME LOGIK ---
     fun selectTool(tool: ToolType?) {
         activeTool.value = tool
     }
@@ -77,12 +98,19 @@ class MixerViewModel(
             showHearts.value = true
             totalHearts.value += 1
             settingsManager.saveHearts(totalHearts.value)
+
+            // Stats in DB aktualisieren
+            currentDestination.value.let { cityName ->
+                travelDao.addHeartsToCity(cityName, 1)
+            }
+
             delay(4000)
             showHearts.value = false
             isInteractionLocked.value = false
         }
     }
 
+    // --- LOCATION & SETTINGS LOGIK ---
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
@@ -90,6 +118,7 @@ class MixerViewModel(
                 location?.let {
                     lastLat = it.latitude
                     lastLon = it.longitude
+                    // WICHTIG: Koordinaten für spätere Distanzberechnungen mitspeichern
                     settingsManager.saveLocation(lastLat, lastLon)
 
                     val geocoder = Geocoder(context, Locale.getDefault())
@@ -97,7 +126,7 @@ class MixerViewModel(
                         val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
                         if (!addresses.isNullOrEmpty()) {
                             val addr = addresses[0]
-                            updateAddressState(
+                            updateAddress(
                                 street = addr.thoroughfare ?: "",
                                 house = addr.subThoroughfare ?: "",
                                 zip = addr.postalCode ?: "",
@@ -125,6 +154,7 @@ class MixerViewModel(
                     settingsManager.saveLocation(lastLat, lastLon)
                 }
 
+                // Persistenz aller Felder im SettingsManager
                 settingsManager.saveUserName(userName.value)
                 settingsManager.saveStreet(userStreet.value)
                 settingsManager.saveHouseNumber(userHouseNumber.value)
@@ -142,7 +172,7 @@ class MixerViewModel(
         userName.value = name
     }
 
-    fun updateAddressState(street: String, house: String, zip: String, city: String) {
+    fun updateAddress(street: String, house: String, zip: String, city: String) {
         userStreet.value = street
         userHouseNumber.value = house
         userZipCode.value = zip
