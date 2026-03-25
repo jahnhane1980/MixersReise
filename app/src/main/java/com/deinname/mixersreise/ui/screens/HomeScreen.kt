@@ -19,6 +19,7 @@ import com.deinname.mixersreise.ui.components.StatsHeader
 import com.deinname.mixersreise.ui.components.MixerDisplay
 import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 import com.deinname.mixersreise.ui.components.MixerToolBar
+import com.deinname.mixersreise.ui.components.MixerTopBar
 
 @Composable
 fun HomeScreen(
@@ -27,8 +28,6 @@ fun HomeScreen(
     onNavigateToWorld: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // HINZUGEFÜGT: Das Hintergrundbild als unterste Ebene
         Image(
             painter = painterResource(id = R.drawable.bg_bedroom_plushies),
             contentDescription = null,
@@ -36,7 +35,6 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // DEIN BESTEHENDER CODE (KOMPLETT WIEDERHERGESTELLT)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -44,9 +42,16 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            StatsHeader(
+            // FIX: Entfernung von onOpenWorld, da dieser Parameter in MixerTopBar nicht existiert
+            MixerTopBar(
                 hearts = viewModel.totalHearts.value,
-                level = 1
+                onOpenMap = onOpenMap,
+                onOpenSettings = { /* Logik für Settings */ }
+            )
+
+            StatsHeader(
+                level = 1,
+                hearts = viewModel.totalHearts.value
             )
 
             Column(
@@ -54,7 +59,6 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                // Hier ist die SpeechBubble wieder drin!
                 if (viewModel.speechText.value.isNotEmpty()) {
                     MixerSpeechBubble(text = viewModel.speechText.value)
                     Spacer(modifier = Modifier.height(16.dp))
@@ -77,7 +81,6 @@ fun HomeScreen(
             )
         }
 
-        // DAS OVERLAY (Rein additiv)
         if (viewModel.isInteractionLocked.value) {
             Box(
                 modifier = Modifier
@@ -87,8 +90,7 @@ fun HomeScreen(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                         enabled = true
-                    ) {
-                    }
+                    ) {}
             )
         }
     }
