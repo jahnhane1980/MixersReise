@@ -4,24 +4,46 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SettingsManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences("mixer_settings", Context.MODE_PRIVATE)
 
-    fun saveHearts(count: Int) = prefs.edit().putInt("hearts", count).apply()
-    fun getHearts(): Int = prefs.getInt("hearts", 0)
+    companion object {
+        private const val KEY_USER_NAME = "user_name"
+        private const val KEY_STREET = "street"
+        private const val KEY_HOUSE_NUMBER = "house_number"
+        private const val KEY_ZIP_CODE = "zip_code"
+        private const val KEY_CITY = "city"
+        private const val KEY_HEARTS = "total_hearts"
+        private const val KEY_LATITUDE = "latitude"
+        private const val KEY_LONGITUDE = "longitude"
+    }
 
-    fun saveUserName(name: String) = prefs.edit().putString("user_name", name).apply()
-    fun getUserName(): String? = prefs.getString("user_name", null)
+    // Standard-Felder
+    fun saveUserName(name: String) = prefs.edit().putString(KEY_USER_NAME, name).apply()
+    fun getUserName(): String? = prefs.getString(KEY_USER_NAME, "")
 
-    // Neu hinzugefügt: Synchronisation mit MixerViewModel
-    fun saveStreet(value: String) = prefs.edit().putString("street", value).apply()
-    fun getStreet(): String? = prefs.getString("street", null)
+    fun saveStreet(street: String) = prefs.edit().putString(KEY_STREET, street).apply()
+    fun getStreet(): String? = prefs.getString(KEY_STREET, "")
 
-    fun saveHouseNumber(value: String) = prefs.edit().putString("house_no", value).apply()
-    fun getHouseNumber(): String? = prefs.getString("house_no", null)
+    fun saveHouseNumber(number: String) = prefs.edit().putString(KEY_HOUSE_NUMBER, number).apply()
+    fun getHouseNumber(): String? = prefs.getString(KEY_HOUSE_NUMBER, "")
 
-    fun saveZipCode(value: String) = prefs.edit().putString("zip", value).apply()
-    fun getZipCode(): String? = prefs.getString("zip", null)
+    fun saveZipCode(zip: String) = prefs.edit().putString(KEY_ZIP_CODE, zip).apply()
+    fun getZipCode(): String? = prefs.getString(KEY_ZIP_CODE, "")
 
-    fun saveCity(value: String) = prefs.edit().putString("city", value).apply()
-    fun getCity(): String? = prefs.getString("city", null)
+    fun saveCity(city: String) = prefs.edit().putString(KEY_CITY, city).apply()
+    fun getCity(): String? = prefs.getString(KEY_CITY, "")
+
+    fun saveHearts(hearts: Int) = prefs.edit().putInt(KEY_HEARTS, hearts).apply()
+    fun getHearts(): Int = prefs.getInt(KEY_HEARTS, 0)
+
+    // Koordinaten-Felder für die Entfernungsberechnung
+    fun saveLocation(lat: Double, lon: Double) {
+        prefs.edit()
+            .putFloat(KEY_LATITUDE, lat.toFloat())
+            .putFloat(KEY_LONGITUDE, lon.toFloat())
+            .apply()
+    }
+
+    fun getLatitude(): Double = prefs.getFloat(KEY_LATITUDE, 0f).toDouble()
+    fun getLongitude(): Double = prefs.getFloat(KEY_LONGITUDE, 0f).toDouble()
 }
