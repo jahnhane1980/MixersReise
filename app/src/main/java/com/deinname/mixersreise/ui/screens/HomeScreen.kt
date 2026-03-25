@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.R
 import com.deinname.mixersreise.viewmodel.MixerViewModel
 import com.deinname.mixersreise.ui.components.MixerDisplay
-import com.deinname.mixersreise.ui.components.MixerSpeechBubble
 import com.deinname.mixersreise.ui.components.MixerToolBar
 import com.deinname.mixersreise.ui.components.MixerTopBar
 import com.deinname.mixersreise.ui.components.SettingsDialog
@@ -49,17 +48,12 @@ fun HomeScreen(
                 onOpenSettings = { showSettings = true }
             )
 
-            // StatsHeader wurde hier entfernt.
-
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                if (viewModel.speechText.value.isNotEmpty()) {
-                    MixerSpeechBubble(text = viewModel.speechText.value)
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
+                // MixerSpeechBubble wurde hier entfernt, da MixerDisplay sie intern anzeigt.
 
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
