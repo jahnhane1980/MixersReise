@@ -110,7 +110,7 @@ class MixerViewModel(
         totalHearts.value = newTotal
     }
 
-    // --- GPS RETRY LOOP LOGIC ---
+    // --- OPTIMIZED GPS RETRY LOGIC (2 VERSUCHE, HALBE ZEIT) ---
 
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
@@ -118,14 +118,16 @@ class MixerViewModel(
         gpsCheckJob = viewModelScope.launch {
             var locationFound = false
             var attempts = 0
+            val maxAttempts = 2 // Auf maximal zwei Durchläufe begrenzt
 
-            while (!locationFound && attempts < 5) {
+            while (!locationFound && attempts < maxAttempts) {
                 speechText.value = if (attempts == 0)
-                    "Ich warte auf deine Geodaten..."
+                    "Suche Geodaten..."
                 else
-                    "Noch keine Rückmeldung (Versuch ${attempts + 1}/5)... Ist GPS an?"
+                    "Zweiter Versuch... Bitte kurz warten."
 
-                val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+                // Schnellere Abfrage: 3 Sekunden Intervall
+                val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000)
                     .setMaxUpdates(1)
                     .build()
 
@@ -145,7 +147,7 @@ class MixerViewModel(
                             locationCallback,
                             Looper.getMainLooper()
                         )
-                        delay(12000)
+                        delay(6000) // Wartezeit auf die Hälfte reduziert (6 Sek. statt 12)
                     } finally {
                         fusedLocationClient.removeLocationUpdates(locationCallback)
                     }
@@ -155,9 +157,9 @@ class MixerViewModel(
 
                 if (!locationFound) {
                     attempts++
-                    if (attempts >= 5) {
-                        speechText.value = "GPS-Suche abgebrochen. Bitte Daten manuell prüfen!"
-                        delay(5000)
+                    if (attempts >= maxAttempts) {
+                        speechText.value = "Kein GPS-Fix. Bitte Ort manuell eingeben!"
+                        delay(4000)
                         speechText.value = ""
                     }
                 }
@@ -185,14 +187,14 @@ class MixerViewModel(
 
                     launch(Dispatchers.Main) {
                         updateAddress(street, house, zip, city)
-                        speechText.value = "Ah, $city! Das habe ich mir gemerkt."
-                        delay(4000)
+                        speechText.value = "Ort erkannt: $city!"
+                        delay(3000)
                         speechText.value = ""
                     }
                 }
             } catch (e: Exception) {
                 launch(Dispatchers.Main) {
-                    speechText.value = "Adresse konnte nicht aufgelöst werden."
+                    speechText.value = "Adress-Fehler. Internetverbindung prüfen."
                 }
             }
         }
