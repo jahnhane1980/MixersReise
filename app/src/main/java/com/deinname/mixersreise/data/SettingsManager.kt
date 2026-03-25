@@ -4,33 +4,52 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class SettingsManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("mixer_prefs", Context.MODE_PRIVATE)
 
-    fun saveHearts(count: Int) = prefs.edit().putInt("hearts", count).apply()
-    fun getHearts(): Int = prefs.getInt("hearts", 0)
+    fun saveUserName(name: String) {
+        sharedPreferences.edit().putString("user_name", name).apply()
+    }
 
-    fun saveUserName(name: String) = prefs.edit().putString("user_name", name).apply()
-    fun getUserName(): String? = prefs.getString("user_name", null)
+    fun getUserName(): String? = sharedPreferences.getString("user_name", "")
 
-    fun saveStreet(value: String) = prefs.edit().putString("street", value).apply()
-    fun getStreet(): String? = prefs.getString("street", null)
+    fun saveHearts(hearts: Int) {
+        sharedPreferences.edit().putInt("total_hearts", hearts).apply()
+    }
 
-    fun saveHouseNumber(value: String) = prefs.edit().putString("house_no", value).apply()
-    fun getHouseNumber(): String? = prefs.getString("house_no", null)
+    fun getHearts(): Int = sharedPreferences.getInt("total_hearts", 0)
 
-    fun saveZipCode(value: String) = prefs.edit().putString("zip", value).apply()
-    fun getZipCode(): String? = prefs.getString("zip", null)
-
-    fun saveCity(value: String) = prefs.edit().putString("city", value).apply()
-    fun getCity(): String? = prefs.getString("city", null)
-
-    fun saveLocation(lat: Double, lon: Double) {
-        prefs.edit()
-            .putFloat("latitude", lat.toFloat())
-            .putFloat("longitude", lon.toFloat())
+    fun saveLocation(latitude: Double, longitude: Double) {
+        sharedPreferences.edit()
+            .putLong("latitude", java.lang.Double.doubleToRawLongBits(latitude))
+            .putLong("longitude", java.lang.Double.doubleToRawLongBits(longitude))
             .apply()
     }
 
-    fun getLatitude(): Double = prefs.getFloat("latitude", 0f).toDouble()
-    fun getLongitude(): Double = prefs.getFloat("longitude", 0f).toDouble()
+    fun getLatitude(): Double = java.lang.Double.longBitsToDouble(sharedPreferences.getLong("latitude", 0L))
+    fun getLongitude(): Double = java.lang.Double.longBitsToDouble(sharedPreferences.getLong("longitude", 0L))
+
+    fun saveStreet(street: String) {
+        sharedPreferences.edit().putString("street", street).apply()
+    }
+
+    fun getStreet(): String? = sharedPreferences.getString("street", "")
+
+    fun saveHouseNumber(number: String) {
+        sharedPreferences.edit().putString("house_number", number).apply()
+    }
+
+    fun getHouseNumber(): String? = sharedPreferences.getString("house_number", "")
+
+    fun saveZipCode(zip: String) {
+        sharedPreferences.edit().putString("zip_code", zip).apply()
+    }
+
+    fun getZipCode(): String? = sharedPreferences.getString("zip_code", "")
+
+    fun saveCity(city: String) {
+        sharedPreferences.edit().putString("city", city).apply()
+    }
+
+    fun getCity(): String? = sharedPreferences.getString("city", "")
 }

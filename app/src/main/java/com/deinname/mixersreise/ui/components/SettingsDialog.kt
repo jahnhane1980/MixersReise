@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -36,7 +37,6 @@ fun SettingsDialog(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Benutzername
                 OutlinedTextField(
                     value = viewModel.userName.value,
                     onValueChange = { viewModel.updateUserName(it) },
@@ -45,7 +45,22 @@ fun SettingsDialog(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "Heimatadresse", style = MaterialTheme.typography.labelLarge)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Heimatadresse",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Button(onClick = { viewModel.detectLocationViaGps() }) {
+                        Text("GPS")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = viewModel.userStreet.value,
@@ -55,6 +70,8 @@ fun SettingsDialog(
                     label = { Text("Straße") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
@@ -75,6 +92,8 @@ fun SettingsDialog(
                         modifier = Modifier.weight(2f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = viewModel.userCity.value,

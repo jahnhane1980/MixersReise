@@ -28,7 +28,6 @@ class MixerViewModel(
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-    // --- GAME STATES ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
@@ -40,14 +39,12 @@ class MixerViewModel(
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
 
-    // --- SETTINGS STATES (UI-Buffer) ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
     var userCity = mutableStateOf(settingsManager.getCity() ?: "")
 
-    // KORREKTUR: Aufruf der DAO-Funktion getAllDestinations()
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
@@ -56,11 +53,9 @@ class MixerViewModel(
             speechText.value = "DEBUG: Speicher leer, starte GPS..."
             detectLocationViaGps()
         } else {
-            speechText.value = "Willkommen in $cityInStore!"
+            speechText.value = "Willkommen zurück in $cityInStore!"
         }
     }
-
-    // --- INTERACTION METHODS ---
 
     fun updateUserName(name: String) {
         userName.value = name
@@ -71,6 +66,50 @@ class MixerViewModel(
         userHouseNumber.value = house
         userZipCode.value = zip
         userCity.value = city
+    }
+
+    @SuppressLint("MissingPermission")
+    fun detectLocationViaGps() {
+        speechText.value = "Suche Satelliten..."
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                location?.let {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        try {
+                            settingsManager.saveLocation(it.latitude, it.longitude)
+                            val geocoder = Geocoder(context, Locale.getDefault())
+                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
+
+                            addresses?.firstOrNull()?.let { addr ->
+                                val street = addr.thoroughfare ?: ""
+                                val house = addr.subThoroughfare ?: ""
+                                val zip = addr.postalCode ?: ""
+                                val city = addr.locality ?: ""
+
+                                settingsManager.saveStreet(street)
+                                settingsManager.saveHouseNumber(house)
+                                settingsManager.saveZipCode(zip)
+                                settingsManager.saveCity(city)
+
+                                val verifyCity = settingsManager.getCity()
+
+                                launch(Dispatchers.Main) {
+                                    updateAddress(street, house, zip, city)
+                                    speechText.value = if (verifyCity == city) {
+                                        "ERFOLG: $city gespeichert!"
+                                    } else {
+                                        "FEHLER: Speicher-Mismatch!"
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            launch(Dispatchers.Main) {
+                                speechText.value = "GPS Fehler: ${e.message}"
+                            }
+                        }
+                    }
+                }
+            }
     }
 
     fun petMixer() {
@@ -102,56 +141,9 @@ class MixerViewModel(
 
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
-        val currentTotal = settingsManager.getHearts()
-        val newTotal = currentTotal + pointsToAdd
-        settingsManager.saveHearts(newTotal)
+        val newTotal = totalHearts.value + pointsToAdd
         totalHearts.value = newTotal
-    }
-
-    // --- LOCATION & PERSISTENCE LOGIC ---
-
-    @SuppressLint("MissingPermission")
-    fun detectLocationViaGps() {
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-            .addOnSuccessListener { location ->
-                location?.let {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        try {
-                            settingsManager.saveLocation(it.latitude, it.longitude)
-                            val geocoder = Geocoder(context, Locale.getDefault())
-                            val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-
-                            addresses?.firstOrNull()?.let { addr ->
-                                val street = addr.thoroughfare ?: ""
-                                val house = addr.subThoroughfare ?: ""
-                                val zip = addr.postalCode ?: ""
-                                val city = addr.locality ?: ""
-
-                                // Persistenz: Sofort schreiben
-                                settingsManager.saveStreet(street)
-                                settingsManager.saveHouseNumber(house)
-                                settingsManager.saveZipCode(zip)
-                                settingsManager.saveCity(city)
-
-                                val verifyCity = settingsManager.getCity()
-
-                                launch(Dispatchers.Main) {
-                                    updateAddress(street, house, zip, city)
-                                    speechText.value = if (verifyCity == city) {
-                                        "ERFOLG: $city gespeichert!"
-                                    } else {
-                                        "FEHLER: Speicher-Mismatch!"
-                                    }
-                                }
-                            }
-                        } catch (e: Exception) {
-                            launch(Dispatchers.Main) {
-                                speechText.value = "CRASH: ${e.message}"
-                            }
-                        }
-                    }
-                }
-            }
+        settingsManager.saveHearts(newTotal)
     }
 
     fun saveAllSettingsWithGeocoding(onComplete: (Boolean, String) -> Unit) {
@@ -169,5 +161,7 @@ class MixerViewModel(
         }
     }
 
-    fun selectTool(tool: ToolType?) { activeTool.value = tool }
+    fun selectTool(tool: ToolType?) {
+        activeTool.value = tool
+    }
 }
