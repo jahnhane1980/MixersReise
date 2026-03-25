@@ -36,6 +36,7 @@ class MixerViewModel(
     var isInteractionLocked = mutableStateOf(false) // Steuert die Blockierung der UI
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
+    var showTalkMenu = mutableStateOf(false)
     var speechText = mutableStateOf("")
     var isSleeping = mutableStateOf(false)
     var droolAlpha = mutableStateOf(0f)
@@ -115,8 +116,44 @@ class MixerViewModel(
         }
     }
 
+    // Logik für die Antwort (Verarbeitet die Auswahl im Menü)
+    fun handleTalkOptionSelected(option: com.deinname.mixersreise.data.TalkOption) {
+        showTalkMenu.value = false
+        speechText.value = option.answer
+        viewModelScope.launch {
+            addHeartsWithMultiplier(2)
+            delay(4000)
+            if (speechText.value == option.answer) speechText.value = ""
+        }
+    }
+
+
+    /*fun useTool(tool: ToolType) {
+        if (isInteractionLocked.value) return
+        viewModelScope.launch {
+            isInteractionLocked.value = true
+            showHearts.value = true
+            when (tool) {
+                ToolType.FOOD -> addHeartsWithMultiplier(5)
+                else -> addHeartsWithMultiplier(1)
+            }
+            delay(4000)
+            showHearts.value = false
+            isInteractionLocked.value = false
+        }
+    }*/
+    // In MixerViewModel.kt suchen und ersetzen:
+
     fun useTool(tool: ToolType) {
         if (isInteractionLocked.value) return
+
+        // BELEG: Spezifische Abzweigung für das Talk-Tool
+        if (tool == ToolType.TALK) {
+            showTalkMenu.value = true
+            return // WICHTIG: Beendet die Funktion, damit KEINE Herzen kommen
+        }
+
+        // Die normale Herzen-Logik für alle anderen Tools
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
