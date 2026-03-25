@@ -31,7 +31,7 @@ fun MapScreen(
     val destinationList by viewModel.allDestinations.collectAsState(initial = emptyList())
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // R4: UI-Asset Protection - Hintergrundbild wiederhergestellt
+        // Hintergrundbild der Weltkarte
         SafeImage(
             resId = R.drawable.bg_world_map,
             contentDescription = "Weltkarte Hintergrund",
@@ -54,19 +54,7 @@ fun MapScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Tabellen-Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Icon", Modifier.weight(0.5f), fontWeight = FontWeight.Bold, color = Color.Black)
-                Text("Herzen", Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color.Black)
-                Text("Stadt", Modifier.weight(2f), fontWeight = FontWeight.Bold, color = Color.Black)
-            }
-
-            HorizontalDivider(thickness = 2.dp, color = Color.DarkGray)
+            // R3: Minimalist Selection - Header Row und dicker Divider entfernt
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize()
@@ -78,6 +66,7 @@ fun MapScreen(
                             .padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // 1. Spalte: Icon (0.5f)
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = null,
@@ -85,6 +74,7 @@ fun MapScreen(
                             modifier = Modifier.weight(0.5f).size(20.dp)
                         )
 
+                        // 2. Spalte: Herzen (1f) - R1: Physical Truth: heartsCollected
                         Text(
                             text = "${destination.heartsCollected}",
                             modifier = Modifier.weight(1f),
@@ -92,6 +82,7 @@ fun MapScreen(
                             color = Color.Black
                         )
 
+                        // 3. Spalte: Stadt (2f) - R1: Physical Truth: cityName
                         Text(
                             text = destination.cityName,
                             modifier = Modifier.weight(2f),
