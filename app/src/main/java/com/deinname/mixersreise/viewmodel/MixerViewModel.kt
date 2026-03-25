@@ -38,6 +38,7 @@ class MixerViewModel(
     var droolAlpha = mutableStateOf(0f)
 
     var heartMultiplier = mutableStateOf(1.0f)
+    var currentDestination = mutableStateOf("Heimat")
 
     // --- SETTINGS STATES ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "")
@@ -45,7 +46,6 @@ class MixerViewModel(
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
     var userCity = mutableStateOf(settingsManager.getCity() ?: "")
-    var currentDestination = mutableStateOf("Berlin")
 
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
@@ -54,59 +54,69 @@ class MixerViewModel(
         speechText.value = if (savedName.isBlank()) "Hallo!" else "Hallo $savedName!"
 
         viewModelScope.launch {
+            // Sicherheits-Timer: Sprechblase leeren
             launch { delay(15000); speechText.value = "" }
 
             try {
                 delay(2500)
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location == null) return@addOnSuccessListener
-
-                    val homeLat = settingsManager.getLatitude()
-                    val homeLon = settingsManager.getLongitude()
-
-                    if (homeLat != 0.0 && homeLon != 0.0) {
-                        val results = FloatArray(1)
-                        Location.distanceBetween(homeLat, homeLon, location.latitude, location.longitude, results)
-                        val distanceKm = (results[0] / 1000).toInt()
-
-                        heartMultiplier.value = when {
-                            distanceKm < 2 -> 1.0f
-                            distanceKm < 10 -> 1.5f
-                            distanceKm < 50 -> 2.0f
-                            else -> 3.0f
+                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .addOnSuccessListener { location ->
+                        if (location == null) {
+                            // WIEDER EINGEBAUT: Diagnose GPS
+                            speechText.value = "Diagnose: GPS-Location ist NULL"
+                            return@addOnSuccessListener
                         }
 
-                        speechText.value = "Du bist $distanceKm km entfernt. Bonus: x${heartMultiplier.value}!"
+                        val homeLat = settingsManager.getLatitude()
+                        val homeLon = settingsManager.getLongitude()
 
-                        viewModelScope.launch {
-                            delay(5000)
-                            speechText.value = ""
+                        if (homeLat != 0.0 && homeLon != 0.0) {
+                            val results = FloatArray(1)
+                            Location.distanceBetween(homeLat, homeLon, location.latitude, location.longitude, results)
+                            val distanceKm = (results[0] / 1000).toInt()
+
+                            heartMultiplier.value = when {
+                                distanceKm < 2 -> 1.0f
+                                distanceKm < 10 -> 1.5f
+                                distanceKm < 50 -> 2.0f
+                                else -> 3.0f
+                            }
+                            speechText.value = "Du bist $distanceKm km entfernt. Bonus: x${heartMultiplier.value}!"
+                        } else {
+                            // WIEDER EINGEBAUT: Diagnose Heimatkoordinaten
+                            speechText.value = "Diagnose: Heimat-Koordinaten sind 0.0"
                         }
+
+                        // Stadt-Erkennung & DB-Sync
+                        val geocoder = Geocoder(context, Locale.getDefault())
+                        viewModelScope.launch(Dispatchers.IO) {
+                            try {
+                                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                                val cityName = addresses?.firstOrNull()?.locality ?: "Unbekannter Ort"
+                                currentDestination.value = cityName
+                                travelDao.insertDestination(TravelDestination(cityName = cityName, heartsCollected = 0))
+                            } catch (e: Exception) { /* Geocoding Fehler */ }
+                        }
+                    }.addOnFailureListener { e ->
+                        speechText.value = "Diagnose Fehler: ${e.message}"
                     }
-                }
             } catch (e: Exception) {
+                speechText.value = "Diagnose Crash: ${e.message}"
                 delay(3000); speechText.value = ""
             }
         }
     }
 
-    // --- KORRIGIERTE PUNKTE-LOGIK (R1: Suspend-Fix) ---
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
-
-        // UI und SharedPreferences (Synchron)
         totalHearts.value += pointsToAdd
         settingsManager.saveHearts(totalHearts.value)
-
-        // Datenbank (Asynchron in Coroutine - FIX)
         viewModelScope.launch(Dispatchers.IO) {
             currentDestination.value.let { cityName ->
                 travelDao.addHeartsToCity(cityName, pointsToAdd)
             }
         }
     }
-
-    // --- TOOL INTERAKTIONEN (R1: Keine erfundenen Enums) ---
 
     fun petMixer() {
         if (isInteractionLocked.value) return
@@ -125,20 +135,16 @@ class MixerViewModel(
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
-
-            // FIX: Nur existierende ToolTypes verwenden
             when(tool) {
                 ToolType.FOOD -> addHeartsWithMultiplier(5)
                 else -> addHeartsWithMultiplier(1)
             }
-
             delay(4000)
             showHearts.value = false
             isInteractionLocked.value = false
         }
     }
 
-    // --- SYSTEM-FUNKTIONEN (Unverändert) ---
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
@@ -148,8 +154,7 @@ class MixerViewModel(
                     val geocoder = Geocoder(context, Locale.getDefault())
                     try {
                         val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
-                        if (!addresses.isNullOrEmpty()) {
-                            val addr = addresses[0]
+                        addresses?.firstOrNull()?.let { addr ->
                             updateAddress(addr.thoroughfare ?: "", addr.subThoroughfare ?: "", addr.postalCode ?: "", addr.locality ?: "")
                         }
                     } catch (e: Exception) { /* ignore */ }
@@ -163,8 +168,7 @@ class MixerViewModel(
             val geocoder = Geocoder(context, Locale.getDefault())
             try {
                 val addresses = geocoder.getFromLocationName(fullAddress, 1)
-                if (!addresses.isNullOrEmpty()) {
-                    val addr = addresses[0]
+                addresses?.firstOrNull()?.let { addr ->
                     settingsManager.saveLocation(addr.latitude, addr.longitude)
                 }
                 settingsManager.saveUserName(userName.value)

@@ -1,14 +1,19 @@
 package com.deinname.mixersreise.data
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TravelDao {
-    @Query("SELECT * FROM travel_destinations")
+
+    @Query("SELECT * FROM travel_destinations ORDER BY heartsCollected DESC")
     fun getAllDestinations(): Flow<List<TravelDestination>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // R2: Signature Synchronicity - Name muss exakt 'insertDestination' sein
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertDestination(destination: TravelDestination)
 
     @Query("UPDATE travel_destinations SET heartsCollected = heartsCollected + :amount WHERE cityName = :cityName")
