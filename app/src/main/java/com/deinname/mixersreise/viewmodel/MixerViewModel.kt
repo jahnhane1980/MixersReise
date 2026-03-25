@@ -39,7 +39,7 @@ class MixerViewModel(
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
 
-    var userName = mutableStateOf(settingsManager.getUserName() ?: "")
+    var userName = mutableStateOf(settingsManager.getUserName().let { if (it.isNullOrBlank()) "Entdecker" else it })
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
@@ -48,6 +48,10 @@ class MixerViewModel(
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
+        if (settingsManager.getUserName().isNullOrBlank()) {
+            settingsManager.saveUserName("Entdecker")
+        }
+
         val cityInStore = settingsManager.getCity()
         if (cityInStore.isNullOrBlank()) {
             speechText.value = "DEBUG: Speicher leer, starte GPS..."
@@ -141,7 +145,8 @@ class MixerViewModel(
 
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
-        val newTotal = totalHearts.value + pointsToAdd
+        val currentTotal = totalHearts.value
+        val newTotal = currentTotal + pointsToAdd
         totalHearts.value = newTotal
         settingsManager.saveHearts(newTotal)
     }
