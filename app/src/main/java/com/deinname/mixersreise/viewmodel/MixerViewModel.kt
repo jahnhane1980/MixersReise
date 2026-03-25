@@ -14,6 +14,7 @@ import com.deinname.mixersreise.data.TravelDestination
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -27,21 +28,22 @@ class MixerViewModel(
 ) : ViewModel() {
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+    private var gpsCheckJob: Job? = null
 
-    // --- GAME STATES (Wiederhergestellt) ---
+    // --- GAME STATES ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
     var isInteractionLocked = mutableStateOf(false)
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
     var speechText = mutableStateOf("")
-    var isSleeping = mutableStateOf(false) // Fix: Wieder da
-    var droolAlpha = mutableStateOf(0f)    // Fix: Wieder da
+    var isSleeping = mutableStateOf(false)
+    var droolAlpha = mutableStateOf(0f)
 
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
 
     // --- SETTINGS STATES ---
-    var userName = mutableStateOf(settingsManager.getUserName().let { if (it.isNullOrBlank()) "Entdecker" else it })
+    var userName = mutableStateOf(settingsManager.getUserName() ?: "Entdecker")
     var userStreet = mutableStateOf(settingsManager.getStreet() ?: "")
     var userHouseNumber = mutableStateOf(settingsManager.getHouseNumber() ?: "")
     var userZipCode = mutableStateOf(settingsManager.getZipCode() ?: "")
@@ -50,23 +52,16 @@ class MixerViewModel(
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
-        // Initial-Check: Name sichern
-        if (settingsManager.getUserName().isNullOrBlank()) {
-            settingsManager.saveUserName("Entdecker")
-        }
-
-        // Standort-Initialisierung
-        val cityInStore = settingsManager.getCity()
-        if (cityInStore.isNullOrBlank()) {
+        if (settingsManager.getCity().isNullOrBlank()) {
             detectLocationViaGps()
         } else {
             speechText.value = "Willkommen zurück!"
         }
     }
 
-    // --- UI METHODS (Wiederhergestellt) ---
+    // --- UI & INTERACTION METHODS ---
 
-    fun selectTool(tool: ToolType?) { // Fix: Wieder da
+    fun selectTool(tool: ToolType?) {
         activeTool.value = tool
     }
 
@@ -80,63 +75,6 @@ class MixerViewModel(
         userZipCode.value = zip
         userCity.value = city
     }
-
-    // --- LOCATION LOGIC (Mit Warte-Zustand) ---
-
-    @SuppressLint("MissingPermission")
-    fun detectLocationViaGps() {
-        speechText.value = "Warte auf Rückmeldung deiner Geodaten..."
-
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
-            .setMaxUpdates(1)
-            .build()
-
-        val locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                val location = locationResult.lastLocation
-                if (location != null) {
-                    processLocation(location)
-                    fusedLocationClient.removeLocationUpdates(this)
-                }
-            }
-        }
-
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
-    }
-
-    private fun processLocation(location: Location) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                settingsManager.saveLocation(location.latitude, location.longitude)
-                val geocoder = Geocoder(context, Locale.getDefault())
-                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
-
-                addresses?.firstOrNull()?.let { addr ->
-                    val street = addr.thoroughfare ?: ""
-                    val house = addr.subThoroughfare ?: ""
-                    val zip = addr.postalCode ?: ""
-                    val city = addr.locality ?: ""
-
-                    // PHYSISCH SPEICHERN
-                    settingsManager.saveStreet(street)
-                    settingsManager.saveHouseNumber(house)
-                    settingsManager.saveZipCode(zip)
-                    settingsManager.saveCity(city)
-
-                    launch(Dispatchers.Main) {
-                        updateAddress(street, house, zip, city)
-                        speechText.value = "Ort gefunden: $city. Daten gesichert!"
-                        delay(3000)
-                        if (speechText.value.contains("Ort gefunden")) speechText.value = ""
-                    }
-                }
-            } catch (e: Exception) {
-                launch(Dispatchers.Main) { speechText.value = "Fehler beim Auflösen der Adresse." }
-            }
-        }
-    }
-
-    // --- INTERACTION METHODS ---
 
     fun petMixer() {
         if (isInteractionLocked.value) return
@@ -155,7 +93,7 @@ class MixerViewModel(
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
-            when(tool) {
+            when (tool) {
                 ToolType.FOOD -> addHeartsWithMultiplier(5)
                 else -> addHeartsWithMultiplier(1)
             }
@@ -167,9 +105,97 @@ class MixerViewModel(
 
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
-        val newTotal = (settingsManager.getHearts() + pointsToAdd)
+        val newTotal = settingsManager.getHearts() + pointsToAdd
         settingsManager.saveHearts(newTotal)
         totalHearts.value = newTotal
+    }
+
+    // --- GPS RETRY LOOP LOGIC ---
+
+    @SuppressLint("MissingPermission")
+    fun detectLocationViaGps() {
+        gpsCheckJob?.cancel()
+        gpsCheckJob = viewModelScope.launch {
+            var locationFound = false
+            var attempts = 0
+
+            while (!locationFound && attempts < 5) {
+                speechText.value = if (attempts == 0)
+                    "Ich warte auf deine Geodaten..."
+                else
+                    "Noch keine Rückmeldung (Versuch ${attempts + 1}/5)... Ist GPS an?"
+
+                val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+                    .setMaxUpdates(1)
+                    .build()
+
+                val currentAttemptJob = launch {
+                    val locationCallback = object : LocationCallback() {
+                        override fun onLocationResult(result: LocationResult) {
+                            result.lastLocation?.let {
+                                locationFound = true
+                                processLocation(it)
+                            }
+                        }
+                    }
+
+                    try {
+                        fusedLocationClient.requestLocationUpdates(
+                            locationRequest,
+                            locationCallback,
+                            Looper.getMainLooper()
+                        )
+                        delay(12000)
+                    } finally {
+                        fusedLocationClient.removeLocationUpdates(locationCallback)
+                    }
+                }
+
+                currentAttemptJob.join()
+
+                if (!locationFound) {
+                    attempts++
+                    if (attempts >= 5) {
+                        speechText.value = "GPS-Suche abgebrochen. Bitte Daten manuell prüfen!"
+                        delay(5000)
+                        speechText.value = ""
+                    }
+                }
+            }
+        }
+    }
+
+    private fun processLocation(location: Location) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+
+                addresses?.firstOrNull()?.let { addr ->
+                    val street = addr.thoroughfare ?: ""
+                    val house = addr.subThoroughfare ?: ""
+                    val zip = addr.postalCode ?: ""
+                    val city = addr.locality ?: ""
+
+                    settingsManager.saveLocation(location.latitude, location.longitude)
+                    settingsManager.saveStreet(street)
+                    settingsManager.saveHouseNumber(house)
+                    settingsManager.saveZipCode(zip)
+                    settingsManager.saveCity(city)
+
+                    launch(Dispatchers.Main) {
+                        updateAddress(street, house, zip, city)
+                        speechText.value = "Ah, $city! Das habe ich mir gemerkt."
+                        delay(4000)
+                        speechText.value = ""
+                    }
+                }
+            } catch (e: Exception) {
+                launch(Dispatchers.Main) {
+                    speechText.value = "Adresse konnte nicht aufgelöst werden."
+                }
+            }
+        }
     }
 
     fun saveAllSettingsWithGeocoding(onComplete: (Boolean, String) -> Unit) {
@@ -180,9 +206,13 @@ class MixerViewModel(
                 settingsManager.saveHouseNumber(userHouseNumber.value)
                 settingsManager.saveZipCode(userZipCode.value)
                 settingsManager.saveCity(userCity.value)
-                launch(Dispatchers.Main) { onComplete(true, "Gespeichert!") }
+                launch(Dispatchers.Main) {
+                    onComplete(true, "Gespeichert!")
+                }
             } catch (e: Exception) {
-                launch(Dispatchers.Main) { onComplete(false, "Fehler!") }
+                launch(Dispatchers.Main) {
+                    onComplete(false, "Fehler!")
+                }
             }
         }
     }
