@@ -104,11 +104,43 @@ class MixerViewModel(
         }
     }
 
+    // MixerViewModel.kt
+
+    // Beleg: Searching for 'addHeartsWithMultiplier'... [Found and fixed names based on TravelDao.kt]
+
+    // MixerViewModel.kt
+
+    // Beleg: Searching for 'addHeartsWithMultiplier'... [Kürzung auf das Wesentliche]
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
+
+        // 1. UI & Settings sofort aktualisieren
         val newTotal = settingsManager.getHearts() + pointsToAdd
         settingsManager.saveHearts(newTotal)
         totalHearts.value = newTotal
+
+        // 2. Datenbank-Sync: Kurz & Schmerzlos
+        val currentCity = settingsManager.getCity() ?: return // Wenn keine Stadt da ist, Abbruch
+
+        viewModelScope.launch(Dispatchers.IO) {
+            // Schritt A: Gibt es den Ort schon?
+            val existing = travelDao.getDestinationByName(currentCity)
+
+            val destinationToSave = if (existing != null) {
+                // Schritt B: Bestehenden Ort nehmen und Herzen draufrechnen
+                existing.copy(heartsCollected = existing.heartsCollected + pointsToAdd)
+            } else {
+                // Schritt C: Ort neu anlegen
+                TravelDestination(
+                    cityName = currentCity,
+                    heartsCollected = pointsToAdd,
+                    isDiscovered = true
+                )
+            }
+
+            // Schritt D: Ab in die DB (REPLACE Strategie regelt den Rest)
+            travelDao.insertDestination(destinationToSave)
+        }
     }
 
     // --- GPS INITIALISIERUNGS-SPERRE LOGIC ---
