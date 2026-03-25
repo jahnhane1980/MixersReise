@@ -50,7 +50,7 @@ class MixerViewModel(
     val allDestinations: Flow<List<TravelDestination>> = travelDao.getAllDestinations()
 
     init {
-        // Initial-Check: Standardwerte setzen falls leer
+        // R3: Cross-File Validation - Initial-Check für Default-Werte
         if (userName.value.isBlank()) {
             userName.value = "Entdecker"
             settingsManager.saveUserName("Entdecker")
@@ -60,7 +60,7 @@ class MixerViewModel(
         speechText.value = "Hallo $savedName!"
 
         viewModelScope.launch {
-            // Falls keine Heimatstadt gesetzt ist, sofortige GPS-Ermittlung
+            // Falls keine Heimatstadt im Storage, sofort GPS triggern
             if (userCity.value.isBlank()) {
                 detectLocationViaGps()
             }
@@ -164,7 +164,19 @@ class MixerViewModel(
                     try {
                         val addresses = geocoder.getFromLocation(it.latitude, it.longitude, 1)
                         addresses?.firstOrNull()?.let { addr ->
-                            updateAddress(addr.thoroughfare ?: "", addr.subThoroughfare ?: "", addr.postalCode ?: "", addr.locality ?: "")
+                            val street = addr.thoroughfare ?: ""
+                            val house = addr.subThoroughfare ?: ""
+                            val zip = addr.postalCode ?: ""
+                            val city = addr.locality ?: ""
+
+                            // Physische Speicherung im Storage
+                            settingsManager.saveStreet(street)
+                            settingsManager.saveHouseNumber(house)
+                            settingsManager.saveZipCode(zip)
+                            settingsManager.saveCity(city)
+
+                            // Synchronisation mit den UI-States für den Dialog
+                            updateAddress(street, house, zip, city)
                         }
                     } catch (e: Exception) { /* ignore */ }
                 }
@@ -191,8 +203,13 @@ class MixerViewModel(
     }
 
     fun updateUserName(name: String) { userName.value = name }
+
     fun updateAddress(street: String, house: String, zip: String, city: String) {
-        userStreet.value = street; userHouseNumber.value = house; userZipCode.value = zip; userCity.value = city
+        userStreet.value = street
+        userHouseNumber.value = house
+        userZipCode.value = zip
+        userCity.value = city
     }
+
     fun selectTool(tool: ToolType?) { activeTool.value = tool }
 }
