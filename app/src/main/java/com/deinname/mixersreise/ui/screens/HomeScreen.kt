@@ -1,78 +1,80 @@
 package com.deinname.mixersreise.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import com.deinname.mixersreise.R
-import com.deinname.mixersreise.ui.components.*
-import com.deinname.mixersreise.ui.theme.LemonChiffon
+import androidx.compose.ui.unit.dp
 import com.deinname.mixersreise.viewmodel.MixerViewModel
+import com.deinname.mixersreise.ui.components.StatsHeader
+import com.deinname.mixersreise.ui.components.MixerDisplay
+import com.deinname.mixersreise.ui.components.MixerSpeechBubble
+import com.deinname.mixersreise.ui.components.MixerToolBar
 
 @Composable
 fun HomeScreen(
     viewModel: MixerViewModel,
     onOpenMap: () -> Unit,
-    onNavigateToWorld: () -> Unit // Synchronisation mit MainActivity
+    onNavigateToWorld: () -> Unit
 ) {
-    var showSettings by remember { mutableStateOf(false) }
+    Box(modifier = Modifier.fillMaxSize()) {
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LemonChiffon)
-    ) {
-        SafeImage(
-            resId = R.drawable.bg_bedroom_plushies,
-            contentDescription = "Schlafzimmer Hintergrund",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // StatsHeader: Korrektur der Parameter (level hinzugefügt, city/onOpenMap entfernt)
+            StatsHeader(
+                hearts = viewModel.totalHearts.value,
+                level = 1 // Dummy-Wert, da 'level' laut Compiler zwingend erforderlich ist
+            )
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
-            topBar = {
-                MixerTopBar(
-                    hearts = viewModel.totalHearts.value,
-                    onOpenMap = { onOpenMap() },
-                    onOpenSettings = { showSettings = true }
-                )
-            },
-            bottomBar = {
-                MixerToolBar(
-                    activeTool = viewModel.activeTool.value,
-                    onToolSelected = { viewModel.selectTool(it) }
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
             ) {
+                // MixerDisplay: Vollständige Parameter-Synchronisation
                 MixerDisplay(
                     isSleeping = viewModel.isSleeping.value,
                     droolAlpha = viewModel.droolAlpha.value,
-                    speechText = viewModel.speechText.value,
                     showHearts = viewModel.showHearts.value,
+                    speechText = viewModel.speechText.value,
                     isInteractionLocked = viewModel.isInteractionLocked.value,
                     activeTool = viewModel.activeTool.value,
                     onMixerClick = { viewModel.petMixer() }
                 )
-
-                if (showSettings) {
-                    SettingsDialog(
-                        onDismiss = { showSettings = false },
-                        viewModel = viewModel
-                    )
-                }
             }
+
+            // MixerToolBar: Korrektur auf onToolSelected
+            MixerToolBar(
+                activeTool = viewModel.activeTool.value,
+                onToolSelected = { tool -> viewModel.selectTool(tool) }
+            )
+        }
+
+        // DAS ADDITIVE OVERLAY
+        if (viewModel.isInteractionLocked.value) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        enabled = true
+                    ) {
+                        // Sperrt die Interaktion
+                    }
+            )
         }
     }
 }

@@ -32,7 +32,7 @@ class MixerViewModel(
 
     // --- GAME STATES ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
-    var isInteractionLocked = mutableStateOf(false)
+    var isInteractionLocked = mutableStateOf(false) // Steuert die Blockierung der UI
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
     var speechText = mutableStateOf("")
@@ -62,6 +62,7 @@ class MixerViewModel(
     // --- UI & INTERACTION METHODS ---
 
     fun selectTool(tool: ToolType?) {
+        if (isInteractionLocked.value) return
         activeTool.value = tool
     }
 
@@ -110,23 +111,23 @@ class MixerViewModel(
         totalHearts.value = newTotal
     }
 
-    // --- OPTIMIZED GPS RETRY LOGIC (2 VERSUCHE, HALBE ZEIT) ---
+    // --- GPS INITIALISIERUNGS-SPERRE LOGIC ---
 
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
         gpsCheckJob?.cancel()
         gpsCheckJob = viewModelScope.launch {
+            isInteractionLocked.value = true // Oberfläche sperren
             var locationFound = false
             var attempts = 0
-            val maxAttempts = 2 // Auf maximal zwei Durchläufe begrenzt
+            val maxAttempts = 2
 
             while (!locationFound && attempts < maxAttempts) {
                 speechText.value = if (attempts == 0)
-                    "Suche Geodaten..."
+                    "Suche Geodaten... Bitte warten."
                 else
-                    "Zweiter Versuch... Bitte kurz warten."
+                    "Zweiter Versuch... Oberfläche bleibt gesperrt."
 
-                // Schnellere Abfrage: 3 Sekunden Intervall
                 val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000)
                     .setMaxUpdates(1)
                     .build()
@@ -147,7 +148,7 @@ class MixerViewModel(
                             locationCallback,
                             Looper.getMainLooper()
                         )
-                        delay(6000) // Wartezeit auf die Hälfte reduziert (6 Sek. statt 12)
+                        delay(6000)
                     } finally {
                         fusedLocationClient.removeLocationUpdates(locationCallback)
                     }
@@ -158,11 +159,15 @@ class MixerViewModel(
                 if (!locationFound) {
                     attempts++
                     if (attempts >= maxAttempts) {
-                        speechText.value = "Kein GPS-Fix. Bitte Ort manuell eingeben!"
+                        speechText.value = "Kein GPS-Fix möglich. Bitte Ort manuell eingeben!"
                         delay(4000)
                         speechText.value = ""
+                        isInteractionLocked.value = false // Sperre aufheben, damit User manuell tippen kann
                     }
                 }
+            }
+            if (locationFound) {
+                isInteractionLocked.value = false // Sperre bei Erfolg aufheben
             }
         }
     }
