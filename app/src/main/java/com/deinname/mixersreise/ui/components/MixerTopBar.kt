@@ -2,42 +2,59 @@ package com.deinname.mixersreise.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.deinname.mixersreise.ui.theme.WarmWood
+import com.deinname.mixersreise.ui.theme.LemonChiffon
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MixerTopBar(
-    hearts: Int, // R5: Parameter 'level' entfernt
+    hearts: Int,
     onOpenMap: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    TopAppBar(
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(WarmWood.copy(alpha = 0.8f))
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                // Nur noch die Herzen anzeigen
-                Text("❤️ $hearts", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(LemonChiffon)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "❤️ $hearts",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        }
+
+        Row {
+            IconButton(onClick = onOpenMap) {
+                Icon(
+                    imageVector = Icons.Default.Map,
+                    contentDescription = "Karte öffnen",
+                    tint = Color.Black
+                )
             }
-        },
-        actions = {
-            IconButton(onClick = { onOpenMap() }) { Text("📍", fontSize = 24.sp) }
-            IconButton(onClick = { onOpenSettings() }) { Text("⚙️", fontSize = 24.sp) }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-    )
+            IconButton(onClick = onOpenSettings) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Einstellungen",
+                    tint = Color.Black
+                )
+            }
+        }
+    }
 }
