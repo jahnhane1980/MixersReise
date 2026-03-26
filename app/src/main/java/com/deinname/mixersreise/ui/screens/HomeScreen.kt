@@ -18,6 +18,8 @@ import com.deinname.mixersreise.ui.components.MixerDisplay
 import com.deinname.mixersreise.ui.components.MixerToolBar
 import com.deinname.mixersreise.ui.components.MixerTopBar
 import com.deinname.mixersreise.ui.components.SettingsDialog
+// Beleg: Import für den neuen Dialog (angenommen er liegt in components)
+ import com.deinname.mixersreise.ui.components.TalkDialog
 
 @Composable
 fun HomeScreen(
@@ -36,11 +38,10 @@ fun HomeScreen(
         )
 
         Column(
-            modifier = Modifier.fillMaxSize(), // Globales Padding entfernt
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Die MixerTopBar wird hier auf die volle Breite gezwungen
             Box(modifier = Modifier.fillMaxWidth()) {
                 MixerTopBar(
                     hearts = viewModel.totalHearts.value,
@@ -49,7 +50,6 @@ fun HomeScreen(
                 )
             }
 
-            // Der Content-Bereich behält sein Padding von 16.dp
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -68,10 +68,18 @@ fun HomeScreen(
                 )
             }
 
-            // Die MixerToolBar am unteren Rand
             MixerToolBar(
                 activeTool = viewModel.activeTool.value,
-                onToolSelected = { tool -> viewModel.selectTool(tool) }
+                onToolSelected = { tool -> viewModel.useTool(tool) }
+            )
+        }
+
+        // Beleg: Dialog-Steuerung für Talk-Optionen
+        if (viewModel.showTalkMenu.value) {
+            TalkDialog(
+                options = viewModel.talkOptions,
+                onOptionSelected = { option -> viewModel.handleTalkOptionSelected(option) },
+                onDismiss = { viewModel.showTalkMenu.value = false }
             )
         }
 
