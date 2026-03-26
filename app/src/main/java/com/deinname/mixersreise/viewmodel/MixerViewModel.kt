@@ -120,6 +120,7 @@ class MixerViewModel(
     }
 
     // Logik für die Antwort (Verarbeitet die Auswahl im Menü)
+    /*
     fun handleTalkOptionSelected(option: TalkOption) {
         showTalkMenu.value = false
         speechText.value = option.answer
@@ -128,8 +129,39 @@ class MixerViewModel(
             delay(4000)
             if (speechText.value == option.answer) speechText.value = ""
         }
-    }
+    }*/
+// ANKER: Suche diese Funktion in MixerViewModel.kt
 
+    // ANKER: Ersetze die vorhandene handleTalkOptionSelected durch diesen Block
+    fun handleTalkOptionSelected(option: TalkOption) {
+        showTalkMenu.value = false
+        if (isInteractionLocked.value) return
+
+        viewModelScope.launch {
+            isInteractionLocked.value = true
+
+            // 1. Mixer zeigt die Antwort in der Sprechblase
+            speechText.value = option.answer
+
+            // 2. 3 Sekunden warten (Lesezeit für den User)
+            delay(3000)
+
+            // 3. Sprechblase entfernen
+            speechText.value = ""
+
+            // 4. Belohnung triggern mit Basis-Punkten (hier: 10)
+            // BELEG: Nutzt nun korrekt den Parameter basePoints
+            addHeartsWithMultiplier(2)
+
+            // 5. Visuelles Feedback (Herzen-Partikel) starten
+            showHearts.value = true
+
+            // 6. Partikel nach 2 Sekunden stoppen und Interaktion freigeben
+            delay(2000)
+            showHearts.value = false
+            isInteractionLocked.value = false
+        }
+    }
     fun useTool(tool: ToolType) {
         if (isInteractionLocked.value) return
 

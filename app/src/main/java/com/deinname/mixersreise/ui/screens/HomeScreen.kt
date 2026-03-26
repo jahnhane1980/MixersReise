@@ -75,10 +75,23 @@ fun HomeScreen(
         }
 
         // Beleg: Dialog-Steuerung für Talk-Optionen
+        /*
         if (viewModel.showTalkMenu.value) {
             TalkDialog(
                 options = viewModel.talkOptions,
                 onOptionSelected = { option -> viewModel.handleTalkOptionSelected(option) },
+                onDismiss = { viewModel.showTalkMenu.value = false }
+            )
+        }*/
+
+        // ANKER: Suche diesen Block am Ende von HomeScreen.kt
+        if (viewModel.showTalkMenu.value) {
+            TalkDialog(
+                options = viewModel.talkOptions,
+                onOptionSelected = { option ->
+                    // WICHTIG: Hier muss der Aufruf an die neue Logik gehen
+                    viewModel.handleTalkOptionSelected(option)
+                },
                 onDismiss = { viewModel.showTalkMenu.value = false }
             )
         }
