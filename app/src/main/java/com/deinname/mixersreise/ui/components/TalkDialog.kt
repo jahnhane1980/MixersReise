@@ -19,6 +19,8 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import com.deinname.mixersreise.data.TalkOption
+import com.deinname.mixersreise.ui.theme.LemonChiffon
+import com.deinname.mixersreise.ui.theme.DarkWood
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,15 +30,24 @@ fun TalkDialog(
     onDismiss: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    // Initialisierung mit der ersten Option, falls die Liste nicht leer ist
     var selectedOption by remember { mutableStateOf(options.firstOrNull()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Was möchtest du wissen?") },
+        // Hintergrundfarbe des Dialogs
+        containerColor = LemonChiffon,
+        title = {
+            Text(
+                text = "Was möchtest du wissen?",
+                color = DarkWood // Schriftfarbe
+            )
+        },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Wähle eine Frage aus der Liste:")
+                Text(
+                    text = "Wähle eine Frage aus der Liste:",
+                    color = DarkWood // Schriftfarbe
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 ExposedDropdownMenuBox(
@@ -44,13 +55,20 @@ fun TalkDialog(
                     onExpandedChange = { expanded = !expanded }
                 ) {
                     OutlinedTextField(
-                        // Hier lag der Fehler: Zugriff erfolgt über .question
                         value = selectedOption?.question ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Frage") },
+                        label = { Text("Frage", color = DarkWood) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        // Farben für das Textfeld
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedTextColor = DarkWood,
+                            unfocusedTextColor = DarkWood,
+                            focusedBorderColor = DarkWood,
+                            unfocusedBorderColor = DarkWood.copy(alpha = 0.7f),
+                            focusedLabelColor = DarkWood,
+                            unfocusedLabelColor = DarkWood
+                        ),
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth()
@@ -58,12 +76,18 @@ fun TalkDialog(
 
                     ExposedDropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
+                        // Hintergrund des Dropdowns
+                        containerColor = LemonChiffon
                     ) {
                         options.forEach { option ->
                             DropdownMenuItem(
-                                // Hier lag der zweite Fehler: Zugriff über .question
-                                text = { Text(text = option.question) },
+                                text = {
+                                    Text(
+                                        text = option.question,
+                                        color = DarkWood // Schriftfarbe der Items
+                                    )
+                                },
                                 onClick = {
                                     selectedOption = option
                                     expanded = false
@@ -79,14 +103,24 @@ fun TalkDialog(
             Button(
                 onClick = {
                     selectedOption?.let { onOptionSelected(it) }
-                }
+                },
+                // Button-Farben passend zum Thema
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DarkWood,
+                    contentColor = LemonChiffon
+                )
             ) {
                 Text("Fragen")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Abbrechen")
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Abbrechen",
+                    color = DarkWood // Schriftfarbe
+                )
             }
         }
     )
