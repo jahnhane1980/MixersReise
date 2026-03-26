@@ -1,89 +1,93 @@
 package com.deinname.mixersreise.ui.components
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+// Standard Compose & Material 3
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.* // Für Button, Text, AlertDialog etc.
+import androidx.compose.runtime.*
+import androidx.compose.ui.unit.dp
+
+// Spezifische Material 3 Dropdown-Komponenten
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedTextField
 import com.deinname.mixersreise.data.TalkOption
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TalkDialog(
     options: List<TalkOption>,
     onOptionSelected: (TalkOption) -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = { onDismiss() }) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(
-                    color = Color.White.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(24.dp)
-                )
-                .padding(20.dp)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Titel des Dialogs
-                Text(
-                    text = "Was möchtest du wissen?",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4A4A4A)
-                )
+    var expanded by remember { mutableStateOf(false) }
+    // Initialisierung mit der ersten Option, falls die Liste nicht leer ist
+    var selectedOption by remember { mutableStateOf(options.firstOrNull()) }
 
-                // Liste der Fragen
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(bottom = 8.dp)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Was möchtest du wissen?") },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Wähle eine Frage aus der Liste:")
+                Spacer(modifier = Modifier.height(16.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
                 ) {
-                    items(options) { option ->
-                        Button(
-                            onClick = { onOptionSelected(option) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE3F2FD),
-                                contentColor = Color(0xFF1976D2)
-                            )
-                        ) {
-                            Text(
-                                text = option.question,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(vertical = 4.dp)
+                    OutlinedTextField(
+                        // Hier lag der Fehler: Zugriff erfolgt über .question
+                        value = selectedOption?.question ?: "",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Frage") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        options.forEach { option ->
+                            DropdownMenuItem(
+                                // Hier lag der zweite Fehler: Zugriff über .question
+                                text = { Text(text = option.question) },
+                                onClick = {
+                                    selectedOption = option
+                                    expanded = false
+                                },
+                                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                             )
                         }
                     }
                 }
-
-                // Abbrechen Button
-                Text(
-                    text = "Vielleicht später",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .clickable { onDismiss() }
-                        .padding(8.dp)
-                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    selectedOption?.let { onOptionSelected(it) }
+                }
+            ) {
+                Text("Fragen")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Abbrechen")
             }
         }
-    }
+    )
 }
