@@ -11,8 +11,9 @@ import androidx.lifecycle.viewModelScope
 import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelDestination
-import com.deinname.mixersreise.data.TalkOption
+// BELEG: Import der Top-Level-Liste aus dem Data-Package
 import com.deinname.mixersreise.data.mixerTalkOptions
+import com.deinname.mixersreise.data.TalkOption
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +36,7 @@ class MixerViewModel(
 
     // --- GAME STATES ---
     var totalHearts = mutableStateOf(settingsManager.getHearts())
-    var isInteractionLocked = mutableStateOf(false)
+    var isInteractionLocked = mutableStateOf(false) // Steuert die Blockierung der UI
     var showHearts = mutableStateOf(false)
     var activeTool = mutableStateOf<ToolType?>(ToolType.HAND)
     var showTalkMenu = mutableStateOf(false)
@@ -46,8 +47,8 @@ class MixerViewModel(
     var heartMultiplier = mutableStateOf(1.0f)
     var currentDestination = mutableStateOf("Heimat")
 
-    // Beleg: Zugriff auf die statischen Optionen des Handlers
-    val talkOptions: List<TalkOption> = MixerInteractionHandler.mixerTalkOptions
+    // BELEG: Definition der Property für den Zugriff auf die Talk-Optionen
+    val talkOptions: List<TalkOption> = mixerTalkOptions
 
     // --- SETTINGS STATES ---
     var userName = mutableStateOf(settingsManager.getUserName() ?: "Entdecker")
@@ -60,12 +61,16 @@ class MixerViewModel(
 
     init {
         viewModelScope.launch {
+            // 1. Summe aus DB holen (auf Background-Thread)
             val dbSum = withContext(Dispatchers.IO) {
                 travelDao.getTotalHeartsSum() ?: 0
             }
+
+            // 2. State & Settings mit DB-Wahrheit abgleichen
             settingsManager.saveHearts(dbSum)
             totalHearts.value = dbSum
 
+            // Abspeichern Standard Name
             val savedName = settingsManager.getUserName()
             if (savedName.isNullOrBlank()) {
                 settingsManager.saveUserName("Entdecker")
@@ -74,6 +79,7 @@ class MixerViewModel(
                 userName.value = savedName
             }
 
+            // 3. Bestehende GPS-Logik
             if (settingsManager.getCity().isNullOrBlank()) {
                 detectLocationViaGps()
             } else {
@@ -82,6 +88,8 @@ class MixerViewModel(
             }
         }
     }
+
+    // --- UI & INTERACTION METHODS ---
 
     fun selectTool(tool: ToolType?) {
         if (isInteractionLocked.value) return
@@ -111,26 +119,27 @@ class MixerViewModel(
         }
     }
 
+    // Logik für die Antwort (Verarbeitet die Auswahl im Menü)
     fun handleTalkOptionSelected(option: TalkOption) {
         showTalkMenu.value = false
         speechText.value = option.answer
         viewModelScope.launch {
-            isInteractionLocked.value = true
             addHeartsWithMultiplier(2)
             delay(4000)
             if (speechText.value == option.answer) speechText.value = ""
-            isInteractionLocked.value = false
         }
     }
 
     fun useTool(tool: ToolType) {
         if (isInteractionLocked.value) return
 
+        // BELEG: Spezifische Abzweigung für das Talk-Tool
         if (tool == ToolType.TALK) {
             showTalkMenu.value = true
-            return
+            return // WICHTIG: Beendet die Funktion, damit KEINE Herzen kommen
         }
 
+        // Die normale Herzen-Logik für alle anderen Tools
         viewModelScope.launch {
             isInteractionLocked.value = true
             showHearts.value = true
@@ -146,14 +155,18 @@ class MixerViewModel(
 
     private fun addHeartsWithMultiplier(basePoints: Int) {
         val pointsToAdd = (basePoints * heartMultiplier.value).toInt()
+
+        // 1. UI & Settings sofort aktualisieren
         val newTotal = settingsManager.getHearts() + pointsToAdd
         settingsManager.saveHearts(newTotal)
         totalHearts.value = newTotal
 
+        // 2. Datenbank-Sync
         val currentCity = settingsManager.getCity() ?: return
 
         viewModelScope.launch(Dispatchers.IO) {
             val existing = travelDao.getDestinationByName(currentCity)
+
             val destinationToSave = if (existing != null) {
                 existing.copy(heartsCollected = existing.heartsCollected + pointsToAdd)
             } else {
@@ -163,9 +176,12 @@ class MixerViewModel(
                     isDiscovered = true
                 )
             }
+
             travelDao.insertDestination(destinationToSave)
         }
     }
+
+    // --- GPS INITIALISIERUNGS-SPERRE LOGIC ---
 
     @SuppressLint("MissingPermission")
     fun detectLocationViaGps() {
