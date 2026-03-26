@@ -12,6 +12,7 @@ import com.deinname.mixersreise.data.SettingsManager
 import com.deinname.mixersreise.data.TravelDao
 import com.deinname.mixersreise.data.TravelDestination
 import com.deinname.mixersreise.data.TalkOption
+import com.deinname.mixersreise.data.mixerTalkOptions
 import com.google.android.gms.location.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
